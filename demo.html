@@ -47,6 +47,8 @@ h1{font:700 1.5rem/1.2 var(--font-serif);margin:0}
 .keys{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
 .keys button{font:inherit;font-size:1rem;padding:4px 10px;border-radius:8px;border:1px solid var(--rule);background:var(--card);color:var(--ink);cursor:pointer}
 .interim{color:var(--muted);font-style:italic;min-height:1.5em;margin-top:6px}
+.trace{font:.72rem/1.35 ui-monospace,Consolas,monospace;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0 0}
+.ver{font-size:.72rem;color:var(--muted);text-align:center;margin:14px 0 24px}
 .result{margin-top:10px;padding:12px 14px;border-radius:12px;border:1px solid var(--rule)}
 .result.ok{border-color:var(--ok);background:var(--ok-soft)}
 .result.bad{border-color:var(--bad);background:var(--bad-soft)}
@@ -241,9 +243,13 @@ if (!SR) note("Этот браузер не умеет распознавать 
 else if (badBrowser()) { note(NO_SR_SERVICE + " Письменные задания работают и здесь.", true); micBtn.disabled = true; }
 else if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name:"microphone" }).then(p => { if (p.state === "denied") note(micDenied(), true); }).catch(() => {});
 // Safari сам не заканчивает запись и может не прислать итог: попытку завершают пауза, кнопка или страховочные таймеры.
-const SILENCE_MS = 2500, NO_SOUND_MS = 10000, STOP_WAIT_MS = 1200;
+const SILENCE_MS = 2500, NO_SOUND_MS = 10000, STOP_WAIT_MS = 1200, MAX_MS = 20000;
+const VERSION = "30.10-3", DEBUG = new URLSearchParams(location.search).has("debug");
+const verEl = document.createElement("p"); verEl.className = "ver"; verEl.textContent = "Версия " + VERSION; document.body.appendChild(verEl);
+let traceEl = null;
+function traceShow(lines){ if (!traceEl) { traceEl = document.createElement("pre"); traceEl.className = "trace"; interim.after(traceEl); } traceEl.textContent = "версия " + VERSION + "\n" + lines.join("\n"); }
 let finishRec = null, cancelRec = null;
-const once = t => { const w = String(t).trim().split(" ").filter(Boolean), h = w.length / 2; return h >= 2 && Number.isInteger(h) && w.slice(0, h).join(" ").toLowerCase() === w.slice(h).join(" ").toLowerCase() ? w.slice(0, h).join(" ") : t; };
+const once = t => { const w = String(t).trim().split(" ").filter(Boolean), n = w.length, low = x => x.toLowerCase(); for (let p = 2; p <= n / 2; p++) if (n % p === 0 && w.every((x, i) => low(x) === low(w[i % p]))) return w.slice(0, p).join(" "); return t; };
 function setListening(on){ listening = on; micBtn.classList.toggle("listening", on); micLabel.textContent = on ? "Слушаю… говорите" : "Сказать"; }
 function abortRec(){ if (cancelRec) cancelRec(); if (rec) { try { rec.onend = null; rec.abort(); } catch (e) {} rec = null; } setListening(false); interim.textContent = ""; }
 function listen(){
@@ -252,8 +258,9 @@ function listen(){
   stopClip(); if ("speechSynthesis" in window) try { speechSynthesis.cancel(); } catch (e) {}
   result.hidden = true; interim.textContent = "";
   const r = new SR(); rec = r; r.lang = "it-IT"; r.interimResults = true; r.maxAlternatives = 5; r.continuous = false;
-  let finals = null, lastInterim = "", failed = false, gotStart = false, settled = false, finishing = false, quietT = 0, stopT = 0; const t0 = Date.now();
-  const clearTimers = () => { clearTimeout(quietT); clearTimeout(stopT); };
+  let finals = null, lastInterim = "", failed = false, gotStart = false, settled = false, finishing = false, lastHeard = "", quietT = 0, stopT = 0, capT = 0; const t0 = Date.now();
+  const trail = [], T = ev => { if (!DEBUG) return; trail.push(((Date.now() - t0) / 1000).toFixed(1) + " " + ev); traceShow(trail.length > 14 ? trail.slice(0, 4).concat("…", trail.slice(-9)) : trail); };
+  const clearTimers = () => { clearTimeout(quietT); clearTimeout(stopT); clearTimeout(capT); };
   const settle = () => {
     if (settled) return; settled = true; clearTimers(); if (rec === r) rec = null; setListening(false); interim.textContent = "";
     if (finals) grade(finals.map(once), true);
@@ -262,22 +269,24 @@ function listen(){
     else if (!gotStart && Date.now() - t0 < 1500) note(NO_SR_SERVICE, true);
     else show({ st:"empty" });
   };
-  const finish = () => { if (settled || finishing) return; finishing = true; clearTimers(); try { r.stop(); } catch (e) {} stopT = setTimeout(() => { try { r.abort(); } catch (e) {} settle(); }, STOP_WAIT_MS); };
+  const finish = () => { if (settled || finishing) return; finishing = true; T("stop"); clearTimers(); try { r.stop(); } catch (e) {} stopT = setTimeout(() => { T("нет ответа на stop"); try { r.abort(); } catch (e) {} settle(); }, STOP_WAIT_MS); };
   finishRec = () => { if (lastInterim) finish(); else abortRec(); };
   cancelRec = () => { settled = true; clearTimers(); };
-  quietT = setTimeout(finish, NO_SOUND_MS);
-  r.onstart = () => { gotStart = true; notice.hidden = true; setListening(true); }; r.onaudiostart = () => { gotStart = true; };
+  quietT = setTimeout(finish, NO_SOUND_MS); capT = setTimeout(finish, MAX_MS);
+  if (DEBUG) for (const n of ["audiostart", "soundstart", "speechstart", "speechend", "soundend", "audioend"]) r.addEventListener && r.addEventListener(n, () => T(n));
+  r.onstart = () => { T("start"); gotStart = true; notice.hidden = true; setListening(true); }; r.onaudiostart = () => { gotStart = true; };
   r.onresult = e => {
     if (settled) return;
     for (let i = e.resultIndex || 0; i < e.results.length; i++) {
       const res = e.results[i], alts = []; for (let k = 0; k < res.length; k++) alts.push(res[k].transcript);
       if (res.isFinal) finals = (finals || []).concat(alts); else lastInterim = alts[0] || lastInterim;
     }
-    interim.textContent = finals ? "" : lastInterim;
-    if (finals) { settle(); try { r.stop(); } catch (e) {} } else if (!finishing) { clearTimeout(quietT); quietT = setTimeout(finish, SILENCE_MS); }
+    const heard = once(lastInterim); interim.textContent = finals ? "" : heard;
+    T((finals ? "итог: " + finals[0] : "текст: " + lastInterim).slice(0, 70));
+    if (finals) { settle(); try { r.stop(); } catch (e) {} } else if (!finishing && heard !== lastHeard) { lastHeard = heard; clearTimeout(quietT); quietT = setTimeout(finish, SILENCE_MS); }
   };
   r.onerror = e => {
-    if (settled) return; const code = e && e.error;
+    if (settled) return; const code = e && e.error; T("ошибка: " + code);
     if (lastInterim && code !== "not-allowed" && code !== "service-not-allowed") { settle(); return; }
     failed = true;
     if (code === "not-allowed" || code === "service-not-allowed") micProblem();
@@ -286,7 +295,7 @@ function listen(){
     else if (code !== "aborted") show({ st:"empty" }, code);
     settle();
   };
-  r.onend = settle;
+  r.onend = () => { T("end"); settle(); };
   try { r.start(); } catch (e) { cancelRec(); rec = null; setListening(false); show({ st:"empty" }); }
 }
 // лучший результат среди альтернатив распознавания
