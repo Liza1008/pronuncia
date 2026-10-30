@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Разговор и письмо</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Literata:opsz,wght@7..72,400;7..72,600;7..72,700&display=swap">
+<style>
+:root{--paper:#f3f5f9;--card:#fff;--ink:#17202d;--muted:#5a6577;--rule:#dce2ea;--accent:#2347c4;--accent-soft:#e8edfb;--on-accent:#fff;--ok:#17794a;--ok-soft:#e3f3ea;--bad:#b8322a;--bad-soft:#fbe7e5;--near:#9a6500;--near-soft:#fff3d6;--shadow:rgba(20,30,50,.14);--font-ui:"Golos Text",system-ui,sans-serif;--font-serif:"Literata",Georgia,serif}
+@media (prefers-color-scheme:dark){:root{--paper:#0f141b;--card:#161d27;--ink:#e4e9f1;--muted:#97a3b5;--rule:#283241;--accent:#8ca9ff;--accent-soft:#1c2740;--on-accent:#0d1320;--ok:#55c78d;--ok-soft:#163626;--bad:#ff7f74;--bad-soft:#3a1f1c;--near:#f0b64a;--near-soft:#3a2f14;--shadow:rgba(0,0,0,.55);color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 var(--font-ui)}
+.wrap{max-width:860px;margin:0 auto;padding:20px 16px 48px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+h1{font:700 1.5rem/1.2 var(--font-serif);margin:0}
+.sub{color:var(--muted);margin:6px 0 0}
+.notice{margin:16px 0;padding:12px 14px;border-radius:12px;border:1px solid var(--near);background:var(--near-soft)}
+.notice.bad{border-color:var(--bad);background:var(--bad-soft)}
+[hidden]{display:none !important}
+.btn{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:8px 12px;cursor:pointer;max-width:100%}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.btn.ghost{background:transparent;color:var(--accent);text-decoration:none}
+.btn[disabled]{opacity:.5;cursor:default}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:22px 24px;box-shadow:0 8px 24px var(--shadow)}
+.progress{color:var(--muted);font-size:.9rem;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.set{color:var(--muted);font-size:.85rem;margin:2px 0 0;font-style:italic}
+.task{color:var(--muted);font-size:.9rem;margin:10px 0 2px}
+.prompt{font:600 clamp(1.3rem,4vw,1.8rem)/1.25 var(--font-serif);margin:4px 0 6px}
+.prompt.it{font-style:italic}
+.hintline{font-family:ui-monospace,Consolas,monospace;font-size:1.15rem;letter-spacing:.06em;color:var(--muted);min-height:1.6em;margin:6px 0 2px;overflow-wrap:anywhere}
+.hintline.tr{font-family:var(--font-ui);font-size:1rem;letter-spacing:0}
+.hintline b{color:var(--ink)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:16px 0 8px}
+.mic{display:inline-flex;align-items:center;gap:10px;font:600 1.05rem var(--font-ui);padding:14px 22px;border-radius:99px;border:2px solid var(--accent);background:var(--accent);color:var(--on-accent);cursor:pointer}
+.mic svg{width:22px;height:22px}
+.mic.listening{background:var(--bad);border-color:var(--bad);animation:pulse 1s infinite}
+.mic[disabled]{opacity:.5;cursor:default;animation:none}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(184,50,42,.45)}50%{box-shadow:0 0 0 12px rgba(184,50,42,0)}}
+.say{display:inline-flex;align-items:center;gap:8px;font:500 .95rem var(--font-ui);padding:10px 16px 10px 12px;border-radius:99px;border:1px solid var(--rule);background:var(--card);color:var(--accent);cursor:pointer}
+.say svg{width:18px;height:18px}
+.write{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 4px}
+.write input{flex:1 1 260px;font:inherit;font-size:1.1rem;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:10px 12px}
+.write input:focus{border-color:var(--accent);outline:none}
+.keys{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.keys button{font:inherit;font-size:1rem;padding:4px 10px;border-radius:8px;border:1px solid var(--rule);background:var(--card);color:var(--ink);cursor:pointer}
+.interim{color:var(--muted);font-style:italic;min-height:1.5em;margin-top:6px}
+.trace{font:.72rem/1.35 ui-monospace,Consolas,monospace;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0 0}
+.ver{font-size:.72rem;color:var(--muted);text-align:center;margin:14px 0 24px}
+.result{margin-top:10px;padding:12px 14px;border-radius:12px;border:1px solid var(--rule)}
+.result.ok{border-color:var(--ok);background:var(--ok-soft)}
+.result.bad{border-color:var(--bad);background:var(--bad-soft)}
+.result.near{border-color:var(--near);background:var(--near-soft)}
+.result b{font-size:1.05rem}
+.result .diff mark{background:transparent;color:var(--bad);font-weight:700;text-decoration:underline}
+.result .alts{color:var(--muted);font-size:.9rem;display:block;margin-top:4px}
+.nav{display:flex;gap:10px;justify-content:space-between;margin-top:18px;flex-wrap:wrap}
+.finish h2{font:700 1.35rem/1.25 var(--font-serif);margin:0 0 8px}
+footer{color:var(--muted);font-size:.85rem;margin-top:28px;line-height:1.5}
+.btn:focus-visible,.mic:focus-visible,.say:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <div><h1 id="title"></h1><p class="sub" id="sub"></p></div>
+    <a class="btn ghost" id="back" href="https://claude.ai/artifact/2dHceWUgiBVyDRLb81RwQ5"></a>
+  </header>
+  <div class="notice" id="notice" hidden role="status"></div>
+  <section class="card" id="card" aria-live="polite">
+    <div class="progress" id="progress"><span id="pos"></span><span id="done"></span></div>
+    <p class="set" id="setName"></p>
+    <p class="task" id="task"></p>
+    <div class="prompt" id="prompt"></div>
+    <div class="hintline" id="hintline"></div>
+    <div class="write" id="write" hidden><input type="text" id="answer" lang="it" autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" class="btn primary" id="check"></button></div>
+    <div class="keys" id="keys" hidden><button type="button" data-ch="à">à</button><button type="button" data-ch="è">è</button><button type="button" data-ch="é">é</button><button type="button" data-ch="ì">ì</button><button type="button" data-ch="ò">ò</button><button type="button" data-ch="ù">ù</button><button type="button" data-ch="'">'</button></div>
+    <div class="actions">
+      <button type="button" class="mic" id="mic"><span id="micIcon"></span><span id="micLabel"></span></button>
+      <button type="button" class="btn" id="hint"></button>
+      <button type="button" class="say" id="play"><span id="spk"></span><span id="playLabel"></span></button>
+    </div>
+    <div class="interim" id="interim"></div>
+    <div class="result" id="result" hidden></div>
+    <div class="nav" id="nav"><button type="button" class="btn" id="prev"></button><button type="button" class="btn" id="again" hidden></button><button type="button" class="btn primary" id="next"></button></div>
+  </section>
+  <section class="card finish" id="finish" hidden>
+    <h2 id="finishTitle"></h2>
+    <p id="finishScore"></p>
+    <div class="nav"><button type="button" class="btn primary" id="restart"></button></div>
+  </section>
+  <footer><p id="how"></p><p id="voice"></p></footer>
+</div>
+<script>
+const SETS = {"u0-ua":{"name":"A. Parole e lettere","items":[{"t":"p","ru":"мороженое","en":"ice cream","uk":"морозиво","it":["gelato","il gelato"]},{"t":"p","ru":"день","en":"day","uk":"день","it":["giorno","il giorno"]},{"t":"p","ru":"ужин","en":"dinner","uk":"вечеря","it":["cena","la cena"]},{"t":"p","ru":"ключ","en":"key","uk":"ключ","it":["chiave","la chiave"]},{"t":"p","ru":"лёд","en":"ice","uk":"лід","it":["ghiaccio","il ghiaccio"]},{"t":"p","ru":"сахар","en":"sugar","uk":"цукор","it":["zucchero","lo zucchero"]},{"t":"p","ru":"кот","en":"cat","uk":"кіт","it":["gatto","il gatto"]},{"t":"p","ru":"гитара","en":"guitar","uk":"гітара","it":["chitarra","la chitarra"]}]},"u0-ub":{"name":"B. Italiano o italiana?","items":[{"t":"p","ru":"итальянский парень","en":"an Italian boy","uk":"італійський хлопець","it":["ragazzo italiano"]},{"t":"p","ru":"итальянская девушка","en":"an Italian girl","uk":"італійська дівчина","it":["ragazza italiana"]},{"t":"p","ru":"итальянские парни","en":"Italian boys","uk":"італійські хлопці","it":["ragazzi italiani"]},{"t":"p","ru":"итальянские девушки","en":"Italian girls","uk":"італійські дівчата","it":["ragazze italiane"]},{"t":"p","ru":"высокий друг","en":"a tall friend","uk":"високий друг","it":["amico alto"]},{"t":"p","ru":"красивая подруга","en":"a beautiful friend (female)","uk":"гарна подруга","it":["amica bella","bella amica"]},{"t":"p","ru":"книги","en":"books","uk":"книжки","it":["libri"]},{"t":"p","ru":"ключи","en":"keys","uk":"ключі","it":["chiavi"]}]},"u0-uc":{"name":"C. Ciao, io sono Alice","items":[{"t":"p","ru":"Привет! Я … (своё имя).","en":"Hi! I'm … (your name).","uk":"Привіт! Я … (своє ім'я).","it":["Ciao, io sono *.","Ciao, sono *."],"s":"Ciao, io sono Anna."},{"t":"p","ru":"Очень приятно!","en":"Nice to meet you!","uk":"Дуже приємно!","it":["Piacere!"]},{"t":"p","ru":"Это Мария.","en":"This is Maria.","uk":"Це Марія.","it":["Questa è Maria."]},{"t":"p","ru":"Это Гари и Боб.","en":"These are Gary and Bob.","uk":"Це Гарі та Боб.","it":["Questi sono Gary e Bob."]},{"t":"p","ru":"Вы американцы? (к нескольким людям)","en":"Are you American? (to several people)","uk":"Ви американці? (до кількох людей)","it":["Siete americani?"]},{"t":"p","ru":"Ты испанка?","en":"Are you Spanish? (to a woman)","uk":"Ти іспанка?","it":["Sei spagnola?"]},{"t":"q","q":"Sei italiano?","ru":"Ты итальянец?","en":"Are you Italian?","uk":"Ти італієць?","ok":["sì","sì *","no","no *"],"sample":"No, sono americano."},{"t":"q","q":"Buongiorno, io sono Marco. E tu?","ru":"Добрый день, я Марко. А ты?","en":"Good morning, I'm Marco. And you?","uk":"Добрий день, я Марко. А ти?","ok":["piacere","piacere *","io sono *","sono *","mi chiamo *","ciao *","buongiorno *"],"sample":"Piacere, io sono Anna."}]},"u0-ud":{"name":"D. Il ragazzo o la ragazza?","items":[{"t":"p","ru":"студент (с определённым артиклем)","en":"the student","uk":"студент (з означеним артиклем)","it":["lo studente"]},{"t":"p","ru":"подруга (с определённым артиклем)","en":"the friend (female)","uk":"подруга (з означеним артиклем)","it":["l'amica"]},{"t":"p","ru":"друзья (с определённым артиклем)","en":"the friends","uk":"друзі (з означеним артиклем)","it":["gli amici"]},{"t":"p","ru":"Дом красивый.","en":"The house is beautiful.","uk":"Будинок гарний.","it":["La casa è bella."]},{"t":"p","ru":"Рыбы маленькие.","en":"The fish are small.","uk":"Риби маленькі.","it":["I pesci sono piccoli."]},{"t":"p","ru":"Ресторан итальянский.","en":"The restaurant is Italian.","uk":"Ресторан італійський.","it":["Il ristorante è italiano."]},{"t":"p","ru":"Машина красная.","en":"The car is red.","uk":"Машина червона.","it":["La macchina è rossa."]},{"t":"p","ru":"десять книг","en":"ten books","uk":"десять книжок","it":["dieci libri"]}]},"u0-ue":{"name":"E. Chi è?","items":[{"t":"p","ru":"Меня зовут … (своё имя).","en":"My name is … (your name).","uk":"Мене звати … (своє ім'я).","it":["Mi chiamo *.","Io mi chiamo *."],"s":"Mi chiamo Anna."},{"t":"p","ru":"Как тебя зовут?","en":"What's your name?","uk":"Як тебе звати?","it":["Come ti chiami?"]},{"t":"p","ru":"Сколько тебе лет?","en":"How old are you?","uk":"Скільки тобі років?","it":["Quanti anni hai?"]},{"t":"p","ru":"Мне … лет (свой возраст).","en":"I'm … years old (your age).","uk":"Мені … років (свій вік).","it":["Ho * anni.","Io ho * anni."],"s":"Ho ventisette anni."},{"t":"p","ru":"У Марии два брата.","en":"Maria has two brothers.","uk":"У Марії двоє братів.","it":["Maria ha due fratelli."]},{"t":"q","q":"Come ti chiami?","ru":"Как тебя зовут?","en":"What's your name?","uk":"Як тебе звати?","ok":["mi chiamo *","io mi chiamo *","sono *","io sono *"],"sample":"Mi chiamo Anna."},{"t":"q","q":"Quanti anni hai?","ru":"Сколько тебе лет?","en":"How old are you?","uk":"Скільки тобі років?","ok":["ho * anni","io ho * anni","* anni","ho un anno"],"sample":"Ho ventisette anni."},{"t":"q","q":"Di dove sei?","ru":"Откуда ты?","en":"Where are you from?","uk":"Звідки ти?","ok":["sono di *","io sono di *","sono *","vengo da *","vengo dall'*","vengo dalla *","vengo dal *"],"sample":"Sono di Kiev."}]},"u1-ua":{"name":"A. Sono molto contenta.","items":[{"t":"p","ru":"Я работаю в газете.","en":"I work at a newspaper.","uk":"Я працюю в газеті.","it":["Lavoro in un giornale.","Io lavoro in un giornale."]},{"t":"p","ru":"Ты говоришь по-итальянски?","en":"Do you speak Italian?","uk":"Ти говориш італійською?","it":["Parli italiano?","Parli l'italiano?"]},{"t":"p","ru":"Мы живём в Риме.","en":"We live in Rome.","uk":"Ми живемо в Римі.","it":["Abitiamo a Roma.","Viviamo a Roma.","Noi abitiamo a Roma."]},{"t":"p","ru":"Я читаю газету.","en":"I'm reading the newspaper.","uk":"Я читаю газету.","it":["Leggo il giornale.","Io leggo il giornale."]},{"t":"p","ru":"Они хорошо понимают итальянский.","en":"They understand Italian well.","uk":"Вони добре розуміють італійську.","it":["Capiscono bene l'italiano.","Loro capiscono bene l'italiano."]},{"t":"p","ru":"Во сколько ты заканчиваешь работать?","en":"What time do you finish work?","uk":"О котрій ти закінчуєш працювати?","it":["A che ora finisci di lavorare?"]},{"t":"q","q":"Dove lavori?","ru":"Где ты работаешь?","en":"Where do you work?","uk":"Де ти працюєш?","ok":["lavoro *","io lavoro *","non lavoro","non lavoro *"],"sample":"Lavoro a Roma."},{"t":"q","q":"Preferisci una pizza o un panino?","ru":"Ты предпочитаешь пиццу или бутерброд?","en":"Would you prefer a pizza or a sandwich?","uk":"Ти надаєш перевагу піці чи бутерброду?","ok":["preferisco *","io preferisco *","una pizza","un panino","pizza","panino"],"sample":"Preferisco una pizza."}]},"u1-ub":{"name":"B. Una pizza con i colleghi","items":[{"t":"p","ru":"друг (с неопределённым артиклем)","en":"a friend (male)","uk":"друг (з неозначеним артиклем)","it":["un amico"]},{"t":"p","ru":"подруга (с неопределённым артиклем)","en":"a friend (female)","uk":"подруга (з неозначеним артиклем)","it":["un'amica"]},{"t":"p","ru":"студент (с неопределённым артиклем)","en":"a student","uk":"студент (з неозначеним артиклем)","it":["uno studente"]},{"t":"p","ru":"интересная книга","en":"an interesting book","uk":"цікава книжка","it":["un libro interessante"]},{"t":"p","ru":"Ребята умные.","en":"The boys are intelligent.","uk":"Хлопці розумні.","it":["I ragazzi sono intelligenti."]},{"t":"p","ru":"Сегодня вечером у меня встреча.","en":"I have an appointment this evening.","uk":"Сьогодні ввечері в мене зустріч.","it":["Stasera ho un appuntamento.","Ho un appuntamento stasera."]},{"t":"q","q":"Hai un appuntamento stasera?","ru":"У тебя сегодня вечером встреча?","en":"Do you have an appointment this evening?","uk":"У тебе сьогодні ввечері зустріч?","ok":["sì","sì *","no","no *"],"sample":"No, stasera studio."},{"t":"q","q":"Hai un'amica italiana?","ru":"У тебя есть подруга-итальянка?","en":"Do you have an Italian friend (female)?","uk":"У тебе є подруга-італійка?","ok":["sì","sì *","no","no *"],"sample":"Sì, ho un'amica italiana."}]},"u1-uc":{"name":"C. Di dove sei?","items":[{"t":"p","ru":"Извини, как доехать до центра?","en":"Excuse me, how do I get to the centre?","uk":"Вибач, як доїхати до центру?","it":["Scusa, per andare in centro?"]},{"t":"p","ru":"Ты иностранец, да?","en":"You're a foreigner, right?","uk":"Ти іноземець, так?","it":["Sei straniero, vero?","Sei straniera, vero?"]},{"t":"p","ru":"Откуда ты?","en":"Where are you from?","uk":"Звідки ти?","it":["Di dove sei?"]},{"t":"p","ru":"Я здесь по работе.","en":"I'm here for work.","uk":"Я тут у справах роботи.","it":["Sono qui per lavoro.","Sono qui per motivi di lavoro."]},{"t":"p","ru":"Я учу итальянский два месяца.","en":"I've been studying Italian for two months.","uk":"Я вчу італійську два місяці.","it":["Studio l'italiano da due mesi.","Studio italiano da due mesi.","Io studio l'italiano da due mesi."]},{"t":"q","q":"Di dove sei?","ru":"Откуда ты?","en":"Where are you from?","uk":"Звідки ти?","ok":["sono di *","io sono di *","sono *","vengo da *","vengo dall'*","vengo dalla *","vengo dal *"],"sample":"Sono di Kiev."},{"t":"q","q":"Dove abiti?","ru":"Где ты живёшь?","en":"Where do you live?","uk":"Де ти живеш?","ok":["abito a *","io abito a *","vivo a *","io vivo a *","abito in *","vivo in *","abito *","vivo *"],"sample":"Abito a Roma."},{"t":"q","q":"Da quanto tempo studi l'italiano?","ru":"Как давно ты учишь итальянский?","en":"How long have you been studying Italian?","uk":"Як давно ти вчиш італійську?","ok":["da *","studio l'italiano da *","studio italiano da *","lo studio da *","io studio l'italiano da *"],"sample":"Studio l'italiano da due mesi."}]},"u1-ud":{"name":"D. Ciao Maria!","items":[{"t":"p","ru":"Добрый вечер!","en":"Good evening!","uk":"Добрий вечір!","it":["Buonasera!"]},{"t":"p","ru":"Спокойной ночи!","en":"Good night!","uk":"На добраніч!","it":["Buonanotte!"]},{"t":"p","ru":"Увидимся!","en":"See you!","uk":"Побачимось!","it":["Ci vediamo!"]},{"t":"p","ru":"Как дела?","en":"How are you?","uk":"Як справи?","it":["Come stai?","Come va?"]},{"t":"p","ru":"Всё хорошо, спасибо.","en":"All good, thanks.","uk":"Усе добре, дякую.","it":["Tutto bene, grazie."]},{"t":"p","ru":"Так себе.","en":"So-so.","uk":"Так собі.","it":["Così e così.","Così così."]},{"t":"q","q":"Come stai?","ru":"Как дела?","en":"How are you?","uk":"Як справи?","ok":["bene","bene grazie","bene grazie e tu","bene e tu","sto bene","sto bene grazie","benissimo","molto bene","tutto bene","tutto bene grazie","tutto bene grazie e tu","tutto bene e tu","così così","così e così","non c'è male","abbastanza bene"],"sample":"Bene, grazie. E tu?"},{"t":"q","q":"Ciao! Come va?","ru":"Привет! Как дела?","en":"Hi! How's it going?","uk":"Привіт! Як справи?","ok":["bene","bene grazie","bene grazie e tu","bene e tu","sto bene","sto bene grazie","benissimo","molto bene","tutto bene","tutto bene grazie","tutto bene grazie e tu","tutto bene e tu","così così","così e così","non c'è male","abbastanza bene"],"sample":"Tutto bene, grazie. E tu?"}]},"u1-ue":{"name":"E. Lei, di dov'è?","items":[{"t":"p","ru":"Извините, как вас зовут?","en":"Excuse me, what's your name? (formal)","uk":"Вибачте, як вас звати?","it":["Scusi, come si chiama?"]},{"t":"p","ru":"Откуда вы? (вежливо, к одному человеку)","en":"Where are you from? (formal)","uk":"Звідки ви? (ввічливо, до однієї людини)","it":["Di dov'è?","Lei di dov'è?","Lei, di dov'è?"]},{"t":"p","ru":"Где вы живёте? (вежливо, к одному человеку)","en":"Where do you live? (formal)","uk":"Де ви живете? (ввічливо, до однієї людини)","it":["Dove abita?","Lei dove abita?"]},{"t":"p","ru":"Сколько вам лет? (вежливо, к одному человеку)","en":"How old are you? (formal)","uk":"Скільки вам років? (ввічливо, до однієї людини)","it":["Quanti anni ha?"]},{"t":"p","ru":"До свидания, синьора!","en":"Goodbye, madam! (formal)","uk":"До побачення, синьйоро!","it":["ArrivederLa, signora!"]},{"t":"q","q":"Lei, come si chiama?","ru":"Как вас зовут?","en":"What's your name? (formal)","uk":"Як вас звати?","ok":["mi chiamo *","io mi chiamo *","sono *","io sono *"],"sample":"Mi chiamo Anna."},{"t":"q","q":"Lei, di dov'è?","ru":"Откуда вы?","en":"Where are you from? (formal)","uk":"Звідки ви?","ok":["sono di *","io sono di *","sono *","vengo da *","vengo dall'*","vengo dalla *","vengo dal *"],"sample":"Sono di Kiev."},{"t":"q","q":"Lei, dove abita?","ru":"Где вы живёте?","en":"Where do you live? (formal)","uk":"Де ви живете?","ok":["abito a *","io abito a *","vivo a *","io vivo a *","abito in *","vivo in *","abito *","vivo *"],"sample":"Abito a Roma."}]},"u1-uf":{"name":"F. Com'è?","items":[{"t":"p","ru":"Он высокий и симпатичный.","en":"He is tall and nice.","uk":"Він високий і симпатичний.","it":["È alto e simpatico.","Lui è alto e simpatico."]},{"t":"p","ru":"У неё длинные волосы.","en":"She has long hair.","uk":"У неї довге волосся.","it":["Ha i capelli lunghi.","Lei ha i capelli lunghi."]},{"t":"p","ru":"У него голубые глаза.","en":"He has blue eyes.","uk":"У нього блакитні очі.","it":["Ha gli occhi azzurri.","Lui ha gli occhi azzurri."]},{"t":"p","ru":"Марко молодой и весёлый.","en":"Marco is young and cheerful.","uk":"Марко молодий і веселий.","it":["Marco è giovane e allegro."]},{"t":"p","ru":"У Кьяры рыжие волосы.","en":"Chiara has red hair.","uk":"У К'яри руде волосся.","it":["Chiara ha i capelli rossi."]},{"t":"q","q":"Hai i capelli lunghi o corti?","ru":"У тебя длинные или короткие волосы?","en":"Is your hair long or short?","uk":"У тебе довге чи коротке волосся?","ok":["ho i capelli *","io ho i capelli *","lunghi","corti"],"sample":"Ho i capelli corti."},{"t":"q","q":"Hai gli occhi azzurri?","ru":"У тебя голубые глаза?","en":"Do you have blue eyes?","uk":"У тебе блакитні очі?","ok":["sì","sì *","no","no *"],"sample":"No, ho gli occhi castani."},{"t":"q","q":"Com'è il tuo amico?","ru":"Какой у тебя друг?","en":"What is your friend like?","uk":"Який у тебе друг?","ok":["è *","lui è *","il mio amico è *"],"sample":"È alto e simpatico."}]}};
+const AUDIO_MAP = {"gelato":[0,1080],"giorno":[1080,1056],"cena":[2136,1872],"chiave":[4008,1872],"ghiaccio":[5880,1872],"zucchero":[7752,1872],"gatto":[9624,1056],"chitarra":[10680,1872],"ragazzo italiano":[12552,1872],"ragazza italiana":[14424,1872],"ragazzi italiani":[16296,1656],"ragazze italiane":[17952,1872],"amico alto":[19824,1872],"amica bella":[21696,1872],"libri":[23568,1872],"chiavi":[25440,1872],"ciao, io sono anna.":[27312,2064],"piacere!":[29376,1128],"questa è maria.":[30504,1872],"questi sono gary e bob.":[32376,2040],"siete americani?":[34416,1872],"sei spagnola?":[36288,1872],"sei italiano?":[38160,1872],"no, sono americano.":[40032,2160],"buongiorno, io sono marco. e tu?":[42192,3192],"piacere, io sono anna.":[45384,2160],"lo studente":[47544,1872],"l'amica":[49416,1872],"gli amici":[51288,1872],"la casa è bella.":[53160,1872],"i pesci sono piccoli.":[55032,1944],"il ristorante è italiano.":[56976,2184],"la macchina è rossa.":[59160,1872],"dieci libri":[61032,1872],"mi chiamo anna.":[62904,1368],"come ti chiami?":[64272,1272],"quanti anni hai?":[65544,1872],"ho ventisette anni.":[67416,1872],"maria ha due fratelli.":[69288,1752],"di dove sei?":[71040,1872],"sono di kiev.":[72912,1872],"lavoro in un giornale.":[74784,1872],"parli italiano?":[76656,1872],"abitiamo a roma.":[78528,1872],"leggo il giornale.":[80400,1872],"capiscono bene l'italiano.":[82272,2064],"a che ora finisci di lavorare?":[84336,2064],"dove lavori?":[86400,1872],"lavoro a roma.":[88272,1872],"preferisci una pizza o un panino?":[90144,2376],"preferisco una pizza.":[92520,1872],"un amico":[94392,1872],"un'amica":[96264,1872],"uno studente":[98136,1464],"un libro interessante":[99600,1944],"i ragazzi sono intelligenti.":[101544,2352],"stasera ho un appuntamento.":[103896,2040],"hai un appuntamento stasera?":[105936,2064],"no, stasera studio.":[108000,2232],"hai un'amica italiana?":[110232,1872],"sì, ho un'amica italiana.":[112104,2472],"scusa, per andare in centro?":[114576,2328],"sei straniero, vero?":[116904,2088],"sono qui per lavoro.":[118992,1872],"studio l'italiano da due mesi.":[120864,2328],"dove abiti?":[123192,1872],"abito a roma.":[125064,1872],"da quanto tempo studi l'italiano?":[126936,2400],"buonasera!":[129336,1872],"buonanotte!":[131208,1872],"ci vediamo!":[133080,1872],"come stai?":[134952,1872],"tutto bene, grazie.":[136824,1992],"così e così.":[138816,1344],"bene, grazie. e tu?":[140160,2544],"ciao! come va?":[142704,1800],"tutto bene, grazie. e tu?":[144504,2736],"scusi, come si chiama?":[147240,2184],"di dov'è?":[149424,1128],"dove abita?":[150552,1872],"quanti anni ha?":[152424,1872],"arrivederla, signora!":[154296,2304],"lei, come si chiama?":[156600,2040],"lei, di dov'è?":[158640,1944],"lei, dove abita?":[160584,2136],"è alto e simpatico.":[162720,1920],"ha i capelli lunghi.":[164640,1608],"ha gli occhi azzurri.":[166248,1680],"marco è giovane e allegro.":[167928,2136],"chiara ha i capelli rossi.":[170064,2088],"hai i capelli lunghi o corti?":[172152,2136],"ho i capelli corti.":[174288,1872],"hai gli occhi azzurri?":[176160,1560],"no, ho gli occhi castani.":[177720,2472],"com'è il tuo amico?":[180192,1872]};
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const SPEAKER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const MIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+$("#spk").innerHTML = SPEAKER; $("#micIcon").innerHTML = MIC;
+
+// ---- языки: ?lang= из тетради, иначе последний выбранный, иначе русский
+const I18N = {
+ru:{ title:"Разговор и письмо", sub:"Фраза на вашем языке, ответ по-итальянски: голосом или текстом. Задания идут вперемешку.", back:"← В тетрадь",
+  taskSay:"Скажите по-итальянски:", taskWrite:"Напишите по-итальянски:", taskQaSay:"Ответьте на вопрос голосом:", taskQaWrite:"Ответьте на вопрос письменно:", placeholder:"Напишите по-итальянски", check:"Проверить",
+  mic:"Сказать", listening:"Слушаю… говорите", hint1:"💡 Подсказка", hint2:"💡 Ещё подсказка", hintEnd:"💡 Подсказок больше нет", playAnswer:"Послушать ответ", playQuestion:"Послушать вопрос",
+  prev:"← Назад", next:"Дальше →", last:"Завершить →", again:"Ещё раз", pos:"{a} из {b}", done:"верно {a} из {b}", right:"✓ Верно", heardSay:"распознано", heardWrite:"ответ", example:"Пример ответа:", near:"≈ Почти.", Heard:"Распознано", Answer:"Ответ",
+  whyAccent:"Проверьте знак ударения или апостроф.", whyWord:"Одно слово расходится с образцом, оно подчёркнуто.", sample:"Образец:", also:"Также подойдёт:", other:"что-то другое", emptyW:"Пусто.", emptyWTip:"Напишите ответ и нажмите «Проверить».", emptyS:"Ничего не распознано.", emptySTip:"Нажмите кнопку, дождитесь красного «Слушаю…» и сразу говорите. Если повторяется, <a href='mic.html'>проверьте микрофон</a>.",
+  finishTitle:"Раздел пройден", finishScore:"Верно {a} из {b}.", restart:"Пройти ещё раз в новом порядке", oneDone:"Готово. Вернитесь на вкладку тетради.", version:"Версия",
+  how:"Как проверяется: ответ сравнивается с несколькими допустимыми вариантами. При устном ответе не считаются ошибкой слова-омофоны (è/e, ha/a), цифры вместо числительных и пропущенные знаки ударения. Одно неверное или пропущенное слово даёт «почти» с подсветкой, где расходится. В заданиях с именем, городом или числом подходит своё значение. Подсказок две, ответ с подсказкой засчитывается.", voice:"Образцы и вопросы озвучены голосом it-IT Elsa, как в тетради.",
+  writeOnly:"Здесь будут только письменные задания.", noSR:"Этот браузер не умеет распознавать речь. Откройте страницу в <b>Chrome</b>, <b>Edge</b> или <b>Safari</b>.", noService:"В этом браузере распознавание речи не работает: Opera, Brave, Dia и некоторые другие браузеры на движке Chrome не имеют сервиса распознавания, хотя кнопка есть. Откройте страницу в <b>Chrome</b>, <b>Edge</b> или <b>Safari</b>.",
+  netOff:"Нет интернета: браузер отправляет звук на сервер распознавания.", netFail:"Браузер не смог связаться со службой распознавания речи. Раз интернет есть, скорее всего, у этого браузера нет доступа к службе: так бывает в браузерах на движке Chrome, например в Dia. Откройте страницу в <b>Chrome</b>, <b>Edge</b> или <b>Safari</b>. Если это уже они, попробуйте отключить VPN.",
+  micDesk:"Доступ к микрофону запрещён. Нажмите значок слева от адреса страницы, разрешите микрофон и перезагрузите страницу.", micPhone:"Chrome запретил этому сайту микрофон. Нажмите ⋮ справа от адреса, затем «Настройки», «Настройки сайта», «Микрофон». Выберите «Разрешить сайтам запрашивать доступ…», а в списке заблокированных нажмите <b>{a}</b> и выберите «Разрешить». Потом перезагрузите страницу.",
+  micApp:"Телефон не даёт Chrome микрофон. Откройте настройки телефона, затем «Приложения», <b>Chrome</b>, «Разрешения», «Микрофон» и выберите «Разрешить». Потом перезагрузите страницу.", micService:"Сайту микрофон разрешён, отказала служба распознавания речи Android. Откройте настройки телефона, затем «Приложения», <b>Речевые сервисы Google</b> (ещё она называется Speech Recognition &amp; Synthesis; если её нет в списке, включите показ всех или системных приложений), «Разрешения», «Микрофон» и выберите «Разрешить». На Android 11 и старше то же сделайте для приложения <b>Google</b>. Если разрешение уже есть, служба может быть занята: закройте голосовой ввод и помощников и нажмите «Сказать» ещё раз.",
+  micOk:"Микрофон разрешён. Нажмите «Сказать» ещё раз.", micNone:"Микрофон не найден." },
+en:{ title:"Speaking and writing", sub:"A phrase in your language, the answer in Italian: by voice or in writing. The tasks come in mixed order.", back:"← Back to the notebook",
+  taskSay:"Say it in Italian:", taskWrite:"Write it in Italian:", taskQaSay:"Answer the question out loud:", taskQaWrite:"Answer the question in writing:", placeholder:"Write in Italian", check:"Check",
+  mic:"Speak", listening:"Listening… speak now", hint1:"💡 Hint", hint2:"💡 Another hint", hintEnd:"💡 No more hints", playAnswer:"Listen to the answer", playQuestion:"Listen to the question",
+  prev:"← Back", next:"Next →", last:"Finish →", again:"Try again", pos:"{a} of {b}", done:"correct: {a} of {b}", right:"✓ Correct", heardSay:"heard", heardWrite:"answer", example:"Example answer:", near:"≈ Almost.", Heard:"Heard", Answer:"Answer",
+  whyAccent:"Check the accent mark or apostrophe.", whyWord:"One word differs from the model, it is underlined.", sample:"Model:", also:"Also accepted:", other:"something else", emptyW:"Empty.", emptyWTip:"Write your answer and press Check.", emptyS:"Nothing was recognised.", emptySTip:"Press the button, wait for the red “Listening…” and speak right away. If this keeps happening, <a href='mic.html'>check your microphone</a>.",
+  finishTitle:"Section finished", finishScore:"Correct: {a} of {b}.", restart:"Do it again in a new order", oneDone:"Done. Go back to the notebook tab.", version:"Version",
+  how:"How answers are checked: your answer is compared with several accepted versions. In spoken answers, homophones (è/e, ha/a), digits instead of number words and missing accents do not count as mistakes. One wrong or missing word gives “almost”, with the difference highlighted. In tasks with a name, city or number, use your own. There are two hints, and an answer given with a hint still counts.", voice:"Samples and questions are voiced by it-IT Elsa, as in the notebook.",
+  writeOnly:"Only written tasks will be shown here.", noSR:"This browser cannot recognise speech. Open the page in <b>Chrome</b>, <b>Edge</b> or <b>Safari</b>.", noService:"Speech recognition does not work in this browser: Opera, Brave, Dia and some other Chrome-based browsers have no recognition service, even though the button is there. Open the page in <b>Chrome</b>, <b>Edge</b> or <b>Safari</b>.",
+  netOff:"No internet: the browser sends the sound to a recognition server.", netFail:"The browser could not reach the speech recognition service. Since you are online, this browser most likely has no access to the service: that happens in Chrome-based browsers such as Dia. Open the page in <b>Chrome</b>, <b>Edge</b> or <b>Safari</b>. If you are already using one of them, try turning off your VPN.",
+  micDesk:"Microphone access is blocked. Click the icon to the left of the page address, allow the microphone and reload the page.", micPhone:"Chrome has blocked the microphone for this site. Tap ⋮ to the right of the address, then Settings, Site settings, Microphone. Choose “Sites can ask…”, tap <b>{a}</b> in the blocked list and choose Allow. Then reload the page.",
+  micApp:"The phone is not giving Chrome the microphone. Open the phone settings, then Apps, <b>Chrome</b>, Permissions, Microphone, and choose Allow. Then reload the page.", micService:"The site has the microphone, but Android's speech recognition service refused. Open the phone settings, then Apps, <b>Speech Services by Google</b> (also called Speech Recognition &amp; Synthesis; if it is not listed, show all or system apps), Permissions, Microphone, and choose Allow. On Android 11 and older do the same for the <b>Google</b> app. If the permission is already there, the service may be busy: close voice input and assistants and press Speak again.",
+  micOk:"The microphone is allowed. Press Speak again.", micNone:"No microphone found." },
+uk:{ title:"Розмова і письмо", sub:"Фраза вашою мовою, відповідь італійською: голосом або текстом. Завдання йдуть упереміш.", back:"← До зошита",
+  taskSay:"Скажіть італійською:", taskWrite:"Напишіть італійською:", taskQaSay:"Дайте відповідь голосом:", taskQaWrite:"Дайте відповідь письмово:", placeholder:"Напишіть італійською", check:"Перевірити",
+  mic:"Сказати", listening:"Слухаю… говоріть", hint1:"💡 Підказка", hint2:"💡 Ще підказка", hintEnd:"💡 Підказок більше немає", playAnswer:"Послухати відповідь", playQuestion:"Послухати запитання",
+  prev:"← Назад", next:"Далі →", last:"Завершити →", again:"Ще раз", pos:"{a} з {b}", done:"правильно {a} з {b}", right:"✓ Правильно", heardSay:"розпізнано", heardWrite:"відповідь", example:"Приклад відповіді:", near:"≈ Майже.", Heard:"Розпізнано", Answer:"Відповідь",
+  whyAccent:"Перевірте знак наголосу або апостроф.", whyWord:"Одне слово відрізняється від зразка, воно підкреслене.", sample:"Зразок:", also:"Також підійде:", other:"щось інше", emptyW:"Порожньо.", emptyWTip:"Напишіть відповідь і натисніть «Перевірити».", emptyS:"Нічого не розпізнано.", emptySTip:"Натисніть кнопку, дочекайтеся червоного «Слухаю…» і одразу говоріть. Якщо це повторюється, <a href='mic.html'>перевірте мікрофон</a>.",
+  finishTitle:"Розділ пройдено", finishScore:"Правильно {a} з {b}.", restart:"Пройти ще раз у новому порядку", oneDone:"Готово. Поверніться на вкладку зошита.", version:"Версія",
+  how:"Як перевіряється: відповідь порівнюється з кількома допустимими варіантами. В усній відповіді не вважаються помилкою слова-омофони (è/e, ha/a), цифри замість числівників і пропущені знаки наголосу. Одне неправильне або пропущене слово дає «майже» з підсвіткою, де є розбіжність. У завданнях з іменем, містом або числом підходить своє значення. Підказок дві, відповідь із підказкою зараховується.", voice:"Зразки й запитання озвучено голосом it-IT Elsa, як у зошиті.",
+  writeOnly:"Тут будуть лише письмові завдання.", noSR:"Цей браузер не вміє розпізнавати мовлення. Відкрийте сторінку в <b>Chrome</b>, <b>Edge</b> або <b>Safari</b>.", noService:"У цьому браузері розпізнавання мовлення не працює: Opera, Brave, Dia та деякі інші браузери на рушії Chrome не мають служби розпізнавання, хоча кнопка є. Відкрийте сторінку в <b>Chrome</b>, <b>Edge</b> або <b>Safari</b>.",
+  netOff:"Немає інтернету: браузер надсилає звук на сервер розпізнавання.", netFail:"Браузер не зміг зв'язатися зі службою розпізнавання мовлення. Оскільки інтернет є, найімовірніше, цей браузер не має доступу до служби: таке буває в браузерах на рушії Chrome, наприклад у Dia. Відкрийте сторінку в <b>Chrome</b>, <b>Edge</b> або <b>Safari</b>. Якщо це вже вони, спробуйте вимкнути VPN.",
+  micDesk:"Доступ до мікрофона заборонено. Натисніть значок ліворуч від адреси сторінки, дозвольте мікрофон і перезавантажте сторінку.", micPhone:"Chrome заборонив цьому сайту мікрофон. Натисніть ⋮ праворуч від адреси, потім «Налаштування», «Налаштування сайтів», «Мікрофон». Дозвольте сайтам запитувати доступ, у списку заблокованих натисніть <b>{a}</b> і виберіть «Дозволити». Потім перезавантажте сторінку.",
+  micApp:"Телефон не дає Chrome мікрофон. Відкрийте налаштування телефона, потім «Застосунки», <b>Chrome</b>, «Дозволи», «Мікрофон» і виберіть «Дозволити». Потім перезавантажте сторінку.", micService:"Сайту мікрофон дозволено, відмовила служба розпізнавання мовлення Android. Відкрийте налаштування телефона, потім «Застосунки», <b>Мовні сервіси Google</b> (ще вона називається Speech Recognition &amp; Synthesis; якщо її немає у списку, увімкніть показ усіх або системних застосунків), «Дозволи», «Мікрофон» і виберіть «Дозволити». На Android 11 і старіших зробіть те саме для застосунку <b>Google</b>. Якщо дозвіл уже є, служба може бути зайнята: закрийте голосове введення й помічників і натисніть «Сказати» ще раз.",
+  micOk:"Мікрофон дозволено. Натисніть «Сказати» ще раз.", micNone:"Мікрофон не знайдено." }
+};
+const KEY = "parlare-v1";
+const store = { lang:"", decks:{}, ok:{}, tries:{}, pos:{} };
+try { Object.assign(store, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
+const params = new URLSearchParams(location.search);
+const lang = I18N[params.get("lang")] ? params.get("lang") : I18N[store.lang] ? store.lang : "ru";
+store.lang = lang; document.documentElement.lang = lang;
+const t = (k, a, b) => String(I18N[lang][k] ?? I18N.ru[k] ?? k).replace("{a}", a).replace("{b}", b);
+
+// ---- числа и нормализация (как в тренажёре слов)
+const NUM1 = ["zero","uno","due","tre","quattro","cinque","sei","sette","otto","nove","dieci","undici","dodici","tredici","quattordici","quindici","sedici","diciassette","diciotto","diciannove"];
+const TENS = ["","","venti","trenta","quaranta","cinquanta","sessanta","settanta","ottanta","novanta"];
+function numToIt(n){
+  n = Number(n); if (!(n >= 0 && n < 1e6) || n !== Math.floor(n)) return null;
+  if (n < 20) return NUM1[n];
+  if (n < 100) { const t = Math.floor(n / 10), u = n % 10; let s = TENS[t]; if (u === 1 || u === 8) s = s.slice(0, -1); return u === 0 ? s : u === 3 ? s + "tré" : s + NUM1[u]; }
+  if (n < 1000) { const h = Math.floor(n / 100), r = n % 100; const s = (h === 1 ? "" : NUM1[h]) + "cento"; if (!r) return s; const rs = numToIt(r); return (rs[0] === "o" ? s.slice(0, -1) : s) + rs; }
+  const k = Math.floor(n / 1000), r = n % 1000; const s = k === 1 ? "mille" : numToIt(k) + "mila"; return r ? s + numToIt(r) : s;
+}
+const expandNums = s => s.replace(/\d+/g, d => numToIt(d) ?? d);
+const HOMO = { ha:"a", ho:"o", oh:"o", "è":"e", hanno:"anno", hai:"ai", "là":"la", "lì":"li", "dà":"da", "sì":"si", "né":"ne", "sé":"se" };
+const norm = s => String(s ?? "").toLowerCase().replace(/[’‘`´]/g, "'").replace(/[.,!?;:«»"“”…()\-]/g, " ").replace(/\s+/g, " ").trim();
+const deacc = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+const toks = s => expandNums(norm(s)).split(" ").filter(Boolean);
+const canon = t => HOMO[t] || t;
+const looseT = t => deacc(canon(t)).replace(/'/g, "");
+const eq = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+// шаблон с *: одно или несколько любых слов
+const patRe = (pat, f) => new RegExp("^" + toks(pat).map(t => t === "*" ? "\\S+(?: \\S+)*" : f(t).replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "\\S*")).join(" ") + "$");
+function tokLev(a, b){ const m = a.length, n = b.length; let prev = Array.from({ length:n + 1 }, (_, j) => j); for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; } return prev[n]; }
+// Сравнение ответа с вариантами. spoken: ударения и апострофы не важны; письменно без ударения — «почти».
+function judge(answer, variants, spoken){
+  const A = toks(answer); if (!A.length) return { st:"empty" };
+  const C = spoken ? canon : (t => t);          // письменно омофоны не приравниваются: e ≠ è
+  const Ac = A.map(C).join(" "), Al = A.map(looseT).join(" ");
+  for (const v of variants) {
+    const hasStar = /\*/.test(v);
+    if (hasStar) { if (patRe(v, C).test(Ac) || (spoken && patRe(v, looseT).test(Al))) return { st:"ok", v }; continue; }
+    const V = toks(v);
+    if (eq(A.map(C), V.map(C))) return { st:"ok", v };
+    if (eq(A.map(looseT), V.map(looseT))) return spoken ? { st:"ok", v } : { st:"near", v, note:"accent" };
+  }
+  let best = null;
+  for (const v of variants) {
+    if (/\*/.test(v)) continue;
+    const V = toks(v).map(looseT), AL = A.map(looseT), d = tokLev(AL, V);
+    if (d <= 1 && V.length >= 3 && (!best || d < best.d)) best = { st:"near", v, d, note:"word" };
+  }
+  return best || { st:"bad", v:variants[0] };
+}
+// Подсветка: слова образца, которых нет в ответе
+function diffHtml(v, answer){ const A = new Set(toks(answer).map(looseT)); return v.split(/(\s+)/).map(p => /\s/.test(p) || !p ? p : (A.has(looseT(toks(p)[0] || "")) ? esc(p) : `<mark>${esc(p)}</mark>`)).join(""); }
+// Подсказка: уровень 1 — первые буквы, 2 — первая и средняя. * показывается как …
+function skeleton(v, level){
+  return v.split(/(\s+)/).map(w => {
+    if (/^\s*$/.test(w)) return w;
+    if (w.includes("*")) return esc(w.replace(/\*/g, "…"));
+    const m = w.match(/^([^\p{L}]*)(.*?)([^\p{L}]*)$/u); const pre = m[1], core = m[2], post = m[3];
+    const chars = [...core]; const keep = new Set([0]); if (level >= 2 && chars.length >= 4) keep.add(Math.floor(chars.length / 2));
+    const out = chars.map((c, i) => c === "'" ? "<b>'</b>" : keep.has(i) ? `<b>${esc(c)}</b>` : "_").join("");
+    return esc(pre) + out + esc(post);
+  }).join("");
+}
+
+// ---- набор заданий. #u0-ua — раздел; #one=… — одно задание из повторения в тетради.
+const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+const rawHash = () => { try { return decodeURIComponent(location.hash.slice(1)); } catch (e) { return ""; } };
+function readOne(){ const h = rawHash(); if (!h.startsWith("one=")) return null; try { const o = JSON.parse(h.slice(4)); return o && o.p && Array.isArray(o.it) && o.it.length ? o : null; } catch (e) { return null; } }
+const ONE = readOne();
+const setId = SETS[rawHash()] ? rawHash() : Object.keys(SETS)[0];
+const items = ONE ? [{ t:"p", [lang]:ONE.p, it:ONE.it, s:ONE.s }] : SETS[setId].items;
+// На фразу один тип; устные и письменные поровну, порядок случайный. Новый порядок и новые типы — при каждом «Пройти ещё раз».
+function makeDeck(){ const order = shuffle(items.map((_, i) => i)), kinds = shuffle(order.map((_, i) => i % 2 ? "write" : "say")); return order.map((i, n) => [i, kinds[n]]); }
+const validDeck = d => Array.isArray(d) && d.length === items.length && d.every(e => Array.isArray(e) && items[e[0]] && (e[1] === "say" || e[1] === "write"));
+let deck, idx;
+if (ONE) { deck = [[0, "say"]]; idx = 0; }
+else { if (!validDeck(store.decks[setId])) { store.decks[setId] = makeDeck(); store.pos[setId] = 0; } deck = store.decks[setId]; idx = Math.min(store.pos[setId] || 0, deck.length - 1); }
+save();
+let hintLevel = 0, voiceOff = false;
+const entry = () => deck[idx];
+const cur = () => items[entry()[0]];
+const kind = () => voiceOff ? "write" : entry()[1];
+const variants = it => it.t === "q" ? it.ok : it.it;
+const sample = it => it.t === "q" ? it.sample : (it.s || it.it[0]);
+const id = () => `${setId}:${entry()[0]}`;
+const passed = () => ONE ? 0 : deck.filter(e => store.ok[`${setId}:${e[0]}`]).length;
+
+// ---- озвучка: записи Elsa (audio/parlare.mp3, карта {фраза: [старт мс, длительность мс]}); голос системы только если клипа нет
+let player = null, stopAt = 0, stopTimer = 0, mediaUrl = null;
+function mediaSrc(){ if (mediaUrl) return mediaUrl; const url = "audio/parlare.mp3"; if (typeof fetch !== "function" || typeof URL === "undefined" || !URL.createObjectURL) return mediaUrl = Promise.resolve(url); return mediaUrl = fetch(url).then(r => { if (!r.ok) throw new Error(String(r.status)); return r.blob(); }).then(b => URL.createObjectURL(b)).catch(() => url); }
+function getPlayer(){ if (!player) { player = new Audio(); player.preload = "auto"; player.addEventListener("timeupdate", () => { if (stopAt && player.currentTime * 1000 >= stopAt) stopClip(); }); } return player; }
+function stopClip(){ clearTimeout(stopTimer); stopAt = 0; if (player && !player.paused) player.pause(); }
+function clip(seg){
+  const p = getPlayer(); stopClip();
+  const go = () => { stopAt = seg[0] + seg[1]; p.currentTime = seg[0] / 1000; const pr = p.play(); (pr && pr.then ? pr : Promise.resolve()).then(() => { stopTimer = setTimeout(stopClip, seg[1] + 80); }).catch(() => { stopAt = 0; }); };
+  if (!p.dataset.ready) { p.dataset.ready = "1"; mediaSrc().then(src => { p.src = src; p.addEventListener("loadedmetadata", go, { once:true }); p.load(); }); } else go();
+}
+const clipOf = t => AUDIO_MAP[String(t).toLowerCase().replace(/[’‘]/g, "'")];
+let itVoice = null;
+function pickVoice(){ try { itVoice = speechSynthesis.getVoices().find(v => /^it([-_]|$)/i.test(v.lang)) || null; } catch (e) {} }
+function speak(t){ const seg = clipOf(t); if (seg) { if ("speechSynthesis" in window) try { speechSynthesis.cancel(); } catch (e) {} clip(seg); return; } if (!("speechSynthesis" in window)) return; try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = "it-IT"; if (itVoice) u.voice = itVoice; u.rate = .95; speechSynthesis.speak(u); } catch (e) {} }
+if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+
+// ---- распознавание (как в тренажёре)
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+let rec = null, listening = false;
+const micBtn = $("#mic"), micLabel = $("#micLabel"), interim = $("#interim"), result = $("#result"), notice = $("#notice");
+function note(html, bad){ notice.innerHTML = html; notice.classList.toggle("bad", !!bad); notice.hidden = false; }
+const badBrowser = () => /OPR\//.test(navigator.userAgent) || !!navigator.brave;
+const PHONE = /Android/i.test(navigator.userAgent);
+// Браузеры на движке Chrome без доступа к службе распознавания называют себя только Chromium (проверено на Dia). Кнопку не отключаем: признак косвенный.
+const noService = () => { const d = navigator.userAgentData; if (!d || !d.brands || d.mobile) return false; const b = d.brands.map(x => x.brand); return b.includes("Chromium") && !b.includes("Google Chrome") && !b.includes("Microsoft Edge"); };
+const micDenied = () => PHONE ? t("micPhone", location.hostname) : t("micDesk");
+const netProblem = () => navigator.onLine === false ? t("netOff") : t("netFail");
+const micState = async () => { try { return (await navigator.permissions.query({ name:"microphone" })).state; } catch (e) { return ""; } };
+async function micProblem(){
+  if (!PHONE) { note(micDenied(), true); return; }
+  const before = await micState();
+  if (before === "denied") { note(micDenied(), true); return; }
+  let mic = false;
+  try { const s = await navigator.mediaDevices.getUserMedia({ audio:true }); s.getTracks().forEach(t => t.stop()); mic = true; } catch (e) {}
+  if ((await micState()) === "denied") note(micDenied(), true);
+  else if (!mic) note(t("micApp"), true);
+  else if (before === "prompt") note(t("micOk"));
+  else note(t("micService"), true);
+}
+if (!SR) { note(t("noSR") + " " + t("writeOnly"), true); voiceOff = true; }
+else if (badBrowser()) { note(t("noService") + " " + t("writeOnly"), true); voiceOff = true; }
+else if (noService()) note(t("noService"), true);
+else if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name:"microphone" }).then(p => { if (p.state === "denied") note(micDenied(), true); }).catch(() => {});
+// Safari сам не заканчивает запись и может не прислать итог: попытку завершают пауза, кнопка или страховочные таймеры.
+const SILENCE_MS = 2500, NO_SOUND_MS = 10000, STOP_WAIT_MS = 1200, MAX_MS = 20000;
+const VERSION = "30.10-7", DEBUG = params.has("debug");
+const verEl = document.createElement("p"); verEl.className = "ver"; verEl.textContent = t("version") + " " + VERSION; document.body.appendChild(verEl);
+const who = () => { const d = navigator.userAgentData, b = d && d.brands ? d.brands.map(x => x.brand).filter(x => !x.includes("Not")).join(", ") : ""; return (b ? b + " · " : "") + navigator.userAgent.replace("Mozilla/5.0 ", "").slice(0, 120); };
+let traceEl = null;
+function traceShow(lines){ if (!traceEl) { traceEl = document.createElement("pre"); traceEl.className = "trace"; interim.after(traceEl); } traceEl.textContent = "версия " + VERSION + "\n" + who() + "\n" + lines.join("\n"); }
+let finishRec = null, cancelRec = null;
+const once = t => { const w = String(t).trim().split(" ").filter(Boolean), n = w.length, low = x => x.toLowerCase(); for (let p = 2; p <= n / 2; p++) if (n % p === 0 && w.every((x, i) => low(x) === low(w[i % p]))) return w.slice(0, p).join(" "); return t; };
+function setListening(on){ listening = on; micBtn.classList.toggle("listening", on); micLabel.textContent = t(on ? "listening" : "mic"); }
+function abortRec(){ if (cancelRec) cancelRec(); if (rec) { try { rec.onend = null; rec.abort(); } catch (e) {} rec = null; } setListening(false); interim.textContent = ""; }
+function listen(){
+  if (!SR) return;
+  if (rec) { if (finishRec) finishRec(); return; }
+  stopClip(); if ("speechSynthesis" in window) try { speechSynthesis.cancel(); } catch (e) {}
+  result.hidden = true; interim.textContent = "";
+  const r = new SR(); rec = r; r.lang = "it-IT"; r.interimResults = true; r.maxAlternatives = 5; r.continuous = false;
+  let finals = null, lastInterim = "", failed = false, gotStart = false, settled = false, finishing = false, lastHeard = "", quietT = 0, stopT = 0, capT = 0; const t0 = Date.now();
+  const trail = [], T = ev => { if (!DEBUG) return; trail.push(((Date.now() - t0) / 1000).toFixed(1) + " " + ev); traceShow(trail.length > 14 ? trail.slice(0, 4).concat("…", trail.slice(-9)) : trail); };
+  const clearTimers = () => { clearTimeout(quietT); clearTimeout(stopT); clearTimeout(capT); };
+  const settle = () => {
+    if (settled) return; settled = true; clearTimers(); if (rec === r) rec = null; setListening(false); interim.textContent = "";
+    if (finals) grade(finals.map(once), true);
+    else if (failed) return;
+    else if (lastInterim) grade([once(lastInterim)], true);
+    else if (!gotStart && Date.now() - t0 < 1500) { note(t("noService") + " " + t("writeOnly"), true); voiceOff = true; render(); }
+    else show({ st:"empty" });
+  };
+  const finish = () => { if (settled || finishing) return; finishing = true; T("stop"); clearTimers(); try { r.stop(); } catch (e) {} stopT = setTimeout(() => { T("нет ответа на stop"); try { r.abort(); } catch (e) {} settle(); }, STOP_WAIT_MS); };
+  finishRec = () => { if (lastInterim) finish(); else abortRec(); };
+  cancelRec = () => { settled = true; clearTimers(); };
+  quietT = setTimeout(finish, NO_SOUND_MS); capT = setTimeout(finish, MAX_MS);
+  if (DEBUG) for (const n of ["audiostart", "soundstart", "speechstart", "speechend", "soundend", "audioend"]) r.addEventListener && r.addEventListener(n, () => T(n));
+  r.onstart = () => { T("start"); gotStart = true; notice.hidden = true; setListening(true); }; r.onaudiostart = () => { gotStart = true; };
+  r.onresult = e => {
+    if (settled) return;
+    for (let i = e.resultIndex || 0; i < e.results.length; i++) {
+      const res = e.results[i], alts = []; for (let k = 0; k < res.length; k++) alts.push(res[k].transcript);
+      if (res.isFinal) finals = (finals || []).concat(alts); else lastInterim = alts[0] || lastInterim;
+    }
+    const heard = once(lastInterim); interim.textContent = finals ? "" : heard;
+    T((finals ? "итог: " + finals[0] : "текст: " + lastInterim).slice(0, 70));
+    if (finals) { settle(); try { r.stop(); } catch (e) {} } else if (!finishing && heard !== lastHeard) { lastHeard = heard; clearTimeout(quietT); quietT = setTimeout(finish, SILENCE_MS); }
+  };
+  r.onerror = e => {
+    if (settled) return; const code = e && e.error; T("ошибка: " + code);
+    if (lastInterim && code !== "not-allowed" && code !== "service-not-allowed") { settle(); return; }
+    failed = true;
+    if (code === "not-allowed" || code === "service-not-allowed") micProblem();
+    else if (code === "audio-capture") note(t("micNone"), true);
+    else if (code === "network") { if (navigator.onLine === false) note(netProblem(), true); else { note(netProblem() + " " + t("writeOnly"), true); voiceOff = true; } }
+    else if (code !== "aborted") show({ st:"empty" }, code);
+    settle();
+    if (voiceOff) render();
+  };
+  r.onend = () => { T("end"); settle(); };
+  try { r.start(); } catch (e) { cancelRec(); rec = null; setListening(false); show({ st:"empty" }); }
+}
+// лучший результат среди альтернатив распознавания
+function grade(answers, spoken){
+  const it = cur(), vs = variants(it);
+  const rank = { ok:3, near:2, bad:1, empty:0 };
+  let best = { st:"empty" }, heard = answers[0] || "";
+  for (const a of answers) { const r = judge(a, vs, spoken); if (rank[r.st] > rank[best.st]) { best = r; heard = a; } }
+  store.tries[id()] = (store.tries[id()] || 0) + 1; if (best.st === "ok") store.ok[id()] = true; save();
+  show(best, "", heard, spoken); paintProgress();
+}
+function show(r, code, heard, spoken){
+  result.hidden = false; result.className = "result " + (r.st === "empty" ? "" : r.st); $("#again").hidden = r.st === "ok";
+  const it = cur(), isQ = it.t === "q", vs = variants(it), h = heard != null ? `«${esc(heard)}»` : "", model = isQ ? it.sample : r.v;
+  if (r.st === "empty") { result.innerHTML = `<b>${t(spoken === false ? "emptyW" : "emptyS")}</b> ${t(spoken === false ? "emptyWTip" : "emptySTip")}`; return; }
+  if (ONE) $("#oneDone").hidden = r.st !== "ok";
+  $("#play").hidden = false;                     // образец слышно только после попытки: иначе это третья подсказка
+  if (r.st === "ok") { result.innerHTML = `<b>${t("right")}</b>${heard && norm(heard) !== norm(r.v) ? ` · ${t(spoken ? "heardSay" : "heardWrite")} ${h}` : ""}${isQ ? ` <span class="alts">${t("example")} ${esc(it.sample)}</span>` : ""}`; return; }
+  const said = t(spoken ? "Heard" : "Answer"), shown = isQ ? esc(model) : diffHtml(model.replace(/\*/g, "…"), heard || "");
+  if (r.st === "near") { result.innerHTML = `<b>${t("near")}</b> ${said} ${h}. ${t(r.note === "accent" ? "whyAccent" : "whyWord")} ${t("sample")} <span class="diff">${shown}</span>`; return; }
+  result.innerHTML = `<b>✗ ${said} ${h || t("other")}.</b> ${t("sample")} <span class="diff">${shown}</span>${!isQ && vs.length > 1 && !/\*/.test(vs[1]) ? `<span class="alts">${t("also")} ${esc(vs[1])}</span>` : ""}`;
+}
+
+// ---- экран
+function paintProgress(){
+  if (ONE) return;
+  $("#pos").textContent = t("pos", idx + 1, deck.length); $("#done").textContent = t("done", passed(), deck.length);
+}
+function paintHint(){ const b = $("#hint"); b.textContent = t(hintLevel >= 2 ? "hintEnd" : hintLevel === 1 ? "hint2" : "hint1"); b.disabled = hintLevel >= 2; }
+function render(){
+  abortRec(); const it = cur(), isQ = it.t === "q", say = kind() === "say";
+  hintLevel = 0; result.hidden = true; $("#again").hidden = true;
+  $("#task").textContent = t(isQ ? (say ? "taskQaSay" : "taskQaWrite") : (say ? "taskSay" : "taskWrite"));
+  const p = $("#prompt"); p.classList.toggle("it", isQ); p.textContent = isQ ? it.q : (it[lang] || it.ru);
+  const hl = $("#hintline"); hl.classList.toggle("tr", isQ); hl.textContent = isQ ? (it[lang] || it.ru) : "";
+  $("#write").hidden = say; $("#keys").hidden = say; $("#mic").hidden = !say; $("#hint").hidden = isQ; paintHint();
+  $("#answer").value = ""; $("#play").hidden = !isQ; $("#playLabel").textContent = t(isQ ? "playQuestion" : "playAnswer");
+  $("#next").textContent = t(idx === deck.length - 1 ? "last" : "next"); $("#prev").disabled = idx === 0;
+  if (ONE) { $("#progress").hidden = true; $("#setName").hidden = true; $("#nav").hidden = true; }
+  else { $("#setName").textContent = SETS[setId].name; store.pos[setId] = idx; save(); }
+  paintProgress();
+  if (!say) setTimeout(() => $("#answer").focus({ preventScroll:true }), 0);
+}
+function showFinish(){
+  abortRec(); $("#card").hidden = true; $("#finish").hidden = false;
+  $("#finishScore").textContent = t("finishScore", passed(), deck.length);
+}
+function restart(){
+  store.decks[setId] = deck = makeDeck(); deck.forEach(e => { delete store.ok[`${setId}:${e[0]}`]; }); idx = 0; store.pos[setId] = 0; save();
+  $("#finish").hidden = true; $("#card").hidden = false; render();
+}
+// статические подписи
+document.title = t("title"); $("#title").textContent = t("title"); $("#sub").textContent = t("sub"); $("#back").textContent = t("back"); $("#how").textContent = t("how"); $("#voice").textContent = t("voice");
+$("#answer").placeholder = t("placeholder"); $("#check").textContent = t("check"); $("#prev").textContent = t("prev"); $("#again").textContent = t("again"); micLabel.textContent = t("mic");
+$("#finishTitle").textContent = t("finishTitle"); $("#restart").textContent = t("restart");
+if (ONE) { const d = document.createElement("p"); d.id = "oneDone"; d.className = "task"; d.hidden = true; d.textContent = t("oneDone"); $("#card").appendChild(d); }
+
+$("#next").addEventListener("click", () => { if (idx >= deck.length - 1) { showFinish(); return; } idx++; render(); });
+$("#prev").addEventListener("click", () => { if (idx > 0) { idx--; render(); } });
+$("#hint").addEventListener("click", () => { if (hintLevel >= 2) return; hintLevel++; $("#hintline").innerHTML = skeleton(cur().it[0], hintLevel); paintHint(); });
+$("#play").addEventListener("click", () => { abortRec(); stopClip(); const it = cur(); speak(it.t === "q" ? it.q : sample(it)); });
+micBtn.addEventListener("click", listen);
+$("#again").addEventListener("click", () => { if (kind() === "write") { $("#answer").value = ""; result.hidden = true; $("#again").hidden = true; $("#answer").focus(); } else listen(); });
+$("#restart").addEventListener("click", restart);
+const checkWritten = () => { const v = $("#answer").value; if (!v.trim()) { show({ st:"empty" }, "", "", false); return; } const r = judge(v, variants(cur()), false); store.tries[id()] = (store.tries[id()] || 0) + 1; if (r.st === "ok") store.ok[id()] = true; save(); show(r, "", v, false); paintProgress(); };
+$("#check").addEventListener("click", checkWritten);
+$("#answer").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); checkWritten(); } });
+$("#keys").addEventListener("pointerdown", e => e.preventDefault());
+$("#keys").addEventListener("click", e => { const b = e.target.closest("button[data-ch]"); if (!b) return; const a = $("#answer"), s = a.selectionStart ?? a.value.length, u = a.selectionEnd ?? s; a.value = a.value.slice(0, s) + b.dataset.ch + a.value.slice(u); a.selectionStart = a.selectionEnd = s + 1; a.focus(); });
+window.addEventListener("hashchange", () => location.reload());
+render();
+</script>
+</body>
+</html>
