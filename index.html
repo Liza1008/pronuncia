@@ -179,9 +179,12 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 let rec = null, listening = false;
 const micBtn = $("#mic"), micLabel = $("#micLabel"), interim = $("#interim"), result = $("#result"), notice = $("#notice");
 function note(html, bad){ notice.innerHTML = html; notice.classList.toggle("bad", !!bad); notice.hidden = false; }
+const NO_SR_SERVICE = "В этом браузере распознавание речи не работает: Opera, Brave и некоторые другие браузеры на движке Chrome не имеют сервиса распознавания, хотя кнопка есть. Откройте страницу в <b>Chrome</b> или <b>Edge</b>.";
+const badBrowser = () => /OPR\//.test(navigator.userAgent) || !!navigator.brave;
 const micDenied = () => "Доступ к микрофону запрещён. Нажмите значок слева от адреса страницы, разрешите микрофон и перезагрузите страницу.";
 function envCheck(){
   if (!SR) { note("Этот браузер не умеет распознавать речь. Откройте тренажёр в <b>Chrome</b> или <b>Edge</b>.", true); micBtn.disabled = true; return; }
+  if (badBrowser()) { note(NO_SR_SERVICE, true); micBtn.disabled = true; return; }
   if (location.protocol === "file:") { note("Страница открыта как файл, а в этом режиме Chrome не включает распознавание речи (ошибка not-allowed). Закройте вкладку и запустите <code>start.cmd</code> из той же папки: он откроет тренажёр по адресу <code>http://127.0.0.1:8765</code>."); return; }
   if (window.isSecureContext === false) { note("Страница открыта по небезопасному адресу, и браузер не даст доступ к микрофону. Откройте её через <code>start.cmd</code> (адрес <code>http://127.0.0.1:8765</code>).", true); return; }
   if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name:"microphone" }).then(p => { if (p.state === "denied") note(micDenied(), true); }).catch(() => {});
@@ -194,8 +197,8 @@ function listen(){
   stopClip(); if ("speechSynthesis" in window) try { speechSynthesis.cancel(); } catch (e) {}
   result.hidden = true; interim.textContent = "";
   const r = new SR(); rec = r; r.lang = "it-IT"; r.interimResults = true; r.maxAlternatives = 5; r.continuous = false;
-  let finals = null, lastInterim = "", failed = false;
-  r.onstart = () => setListening(true);
+  let finals = null, lastInterim = "", failed = false, gotStart = false; const t0 = Date.now();
+  r.onstart = () => { gotStart = true; setListening(true); }; r.onaudiostart = () => { gotStart = true; };
   r.onresult = e => {
     for (let i = e.resultIndex || 0; i < e.results.length; i++) {
       const res = e.results[i], alts = []; for (let k = 0; k < res.length; k++) alts.push(res[k].transcript);
@@ -213,7 +216,7 @@ function listen(){
     else if (code === "no-speech") show("empty");
     else if (code !== "aborted") show("empty", code);
   };
-  r.onend = () => { rec = null; setListening(false); if (!finals && !failed) { if (lastInterim) judge([lastInterim]); else show("empty"); } };
+  r.onend = () => { rec = null; setListening(false); if (!finals && !failed) { if (!gotStart && Date.now() - t0 < 1500) note(NO_SR_SERVICE, true); else if (lastInterim) judge([lastInterim]); else show("empty"); } };
   try { r.start(); } catch (e) { setListening(false); show("empty"); }
 }
 function judge(alts){

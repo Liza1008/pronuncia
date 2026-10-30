@@ -219,8 +219,11 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 let rec = null, listening = false;
 const micBtn = $("#mic"), micLabel = $("#micLabel"), interim = $("#interim"), result = $("#result"), notice = $("#notice");
 function note(html, bad){ notice.innerHTML = html; notice.classList.toggle("bad", !!bad); notice.hidden = false; }
+const NO_SR_SERVICE = "В этом браузере распознавание речи не работает: Opera, Brave и некоторые другие браузеры на движке Chrome не имеют сервиса распознавания, хотя кнопка есть. Откройте страницу в <b>Chrome</b> или <b>Edge</b>.";
+const badBrowser = () => /OPR\//.test(navigator.userAgent) || !!navigator.brave;
 const micDenied = () => "Доступ к микрофону запрещён. Нажмите значок слева от адреса страницы, разрешите микрофон и перезагрузите страницу.";
 if (!SR) note("Этот браузер не умеет распознавать речь: устные задания не сработают. Откройте в <b>Chrome</b> или <b>Edge</b>. Письменные задания работают везде.", true);
+else if (badBrowser()) { note(NO_SR_SERVICE + " Письменные задания работают и здесь.", true); micBtn.disabled = true; }
 else if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name:"microphone" }).then(p => { if (p.state === "denied") note(micDenied(), true); }).catch(() => {});
 function setListening(on){ listening = on; micBtn.classList.toggle("listening", on); micLabel.textContent = on ? "Слушаю… говорите" : "Сказать"; }
 function abortRec(){ if (rec) { try { rec.onend = null; rec.abort(); } catch (e) {} rec = null; } setListening(false); }
@@ -230,8 +233,8 @@ function listen(){
   stopClip(); if ("speechSynthesis" in window) try { speechSynthesis.cancel(); } catch (e) {}
   result.hidden = true; interim.textContent = "";
   const r = new SR(); rec = r; r.lang = "it-IT"; r.interimResults = true; r.maxAlternatives = 5; r.continuous = false;
-  let finals = null, lastInterim = "", failed = false;
-  r.onstart = () => setListening(true);
+  let finals = null, lastInterim = "", failed = false, gotStart = false; const t0 = Date.now();
+  r.onstart = () => { gotStart = true; setListening(true); }; r.onaudiostart = () => { gotStart = true; };
   r.onresult = e => {
     for (let i = e.resultIndex || 0; i < e.results.length; i++) {
       const res = e.results[i], alts = []; for (let k = 0; k < res.length; k++) alts.push(res[k].transcript);
@@ -247,7 +250,7 @@ function listen(){
     else if (code === "network") note("Распознавание не работает без интернета.", true);
     else if (code !== "aborted") show({ st:"empty" }, code);
   };
-  r.onend = () => { rec = null; setListening(false); if (!finals && !failed) { if (lastInterim) grade([lastInterim], true); else show({ st:"empty" }); } };
+  r.onend = () => { rec = null; setListening(false); if (!finals && !failed) { if (!gotStart && Date.now() - t0 < 1500) note(NO_SR_SERVICE, true); else if (lastInterim) grade([lastInterim], true); else show({ st:"empty" }); } };
   try { r.start(); } catch (e) { setListening(false); show({ st:"empty" }); }
 }
 // лучший результат среди альтернатив распознавания

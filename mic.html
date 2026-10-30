@@ -57,6 +57,8 @@ row("Распознавание речи в браузере", SR ? "есть" :
 row("getUserMedia (прямой доступ к микрофону)", navigator.mediaDevices && navigator.mediaDevices.getUserMedia ? "есть" : "нет", navigator.mediaDevices && navigator.mediaDevices.getUserMedia ? "yes" : "no");
 if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name:"microphone" }).then(p => row("Состояние разрешения на микрофон", p.state, p.state === "granted" ? "yes" : p.state === "denied" ? "no" : "maybe")).catch(e => row("Состояние разрешения на микрофон", "не удалось узнать: " + (e && e.message || e), "maybe"));
 row("Браузер", navigator.userAgent.replace(/^Mozilla\/5\.0 /, "").slice(0, 90));
+const badBrowser = /OPR\//.test(navigator.userAgent) || !!navigator.brave;
+row("Сервис распознавания речи", badBrowser ? "нет: Opera/Brave не имеют сервиса, нужен Chrome или Edge" : "должен быть (Chrome: Google, Edge: Microsoft)", badBrowser ? "no" : "yes");
 const verdict = (ok, text) => { const v = $("#verdict"); v.hidden = false; v.className = "big " + (ok ? "ok" : "bad"); v.textContent = text; };
 $("#sr").addEventListener("click", () => {
   if (!SR) { put("SpeechRecognition недоступен в этом браузере"); verdict(false, "Распознавания речи здесь нет (Firefox? старый браузер?)"); return; }
@@ -67,7 +69,7 @@ $("#sr").addEventListener("click", () => {
   r.onaudiostart = () => put("onaudiostart: звук пошёл");
   r.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++) { const res = e.results[i]; const alts = []; for (let k = 0; k < res.length; k++) alts.push(res[k].transcript); put((res.isFinal ? "РЕЗУЛЬТАТ: " : "промежуточно: ") + alts.join(" | ")); if (res.isFinal) { got = true; verdict(true, "Распознавание работает: «" + alts[0] + "»"); } } };
   r.onerror = e => { put("onerror: " + (e && e.error) + (e && e.message ? " — " + e.message : "")); if (e && e.error === "not-allowed") verdict(false, "Ошибка not-allowed: доступ к микрофону для этой страницы закрыт"); else if (e && e.error === "no-speech") verdict(false, "Микрофон открылся, но речи не услышано: попробуйте ещё раз и говорите сразу"); else verdict(false, "Ошибка: " + (e && e.error)); };
-  r.onend = () => put("onend" + (got ? "" : " (результата не было)"));
+  r.onend = () => { put("onend" + (got ? "" : " (результата не было)")); if (!got && $("#verdict").hidden) verdict(false, badBrowser ? "В Opera и Brave сервиса распознавания речи нет, хотя кнопка есть: откройте эту страницу в Chrome или Edge" : "Распознавание завершилось без результата: попробуйте ещё раз и говорите сразу"); };
   try { r.start(); } catch (e) { put("start() бросил исключение: " + (e && e.message || e)); verdict(false, "Не удалось запустить: " + (e && e.message || e)); }
 });
 $("#gum").addEventListener("click", async () => {
