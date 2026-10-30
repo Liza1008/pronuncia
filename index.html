@@ -13,6 +13,10 @@
 html,body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 var(--font-ui)}
 .wrap{max-width:860px;margin:0 auto;padding:20px 16px 48px}
 h1{font:700 1.6rem/1.2 var(--font-serif);margin:0}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.btn.ghost{background:transparent;color:var(--accent);text-decoration:none}
+.set-title{display:none;font:600 1.05rem var(--font-ui);margin:14px 0 0}
+body.locked .set-title{display:block} body.locked #set,body.locked label[for="set"]{display:none}
 .sub{color:var(--muted);margin:4px 0 0}
 .notice{margin:16px 0;padding:12px 14px;border-radius:12px;border:1px solid var(--near);background:var(--near-soft)}
 .notice.bad{border-color:var(--bad);background:var(--bad-soft)}
@@ -60,11 +64,13 @@ footer{color:var(--muted);font-size:.85rem;margin-top:28px;line-height:1.5}
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>Pronuncia</h1>
-    <p class="sub">Нажмите кнопку с микрофоном и сразу произнесите слово. Браузер распознает речь и сравнит с образцом.</p>
+  <header class="head">
+    <div><h1>Pronuncia</h1></div>
+    <a class="btn ghost back" href="https://claude.ai/artifact/2dHceWUgiBVyDRLb81RwQ5">← В тетрадь</a>
   </header>
+  <p class="sub">Нажмите кнопку с микрофоном и сразу произнесите слово. Браузер распознает речь и сравнит с образцом.</p>
   <div class="notice" id="notice" hidden role="status"></div>
+  <h2 class="set-title" id="setTitle"></h2>
   <div class="controls">
     <label for="set" class="chk">Набор</label><select id="set"></select>
     <label class="chk"><input type="checkbox" id="shuffle"> случайный порядок</label>
@@ -253,7 +259,7 @@ function showItem(play){
   const chip = $(`.chip[data-i="${idx}"]`); if (chip && chip.scrollIntoView) chip.scrollIntoView({ block:"nearest" });
   if (play && cur && store.autoPlay) playCurrent();
 }
-function chooseSet(id){ set = SETS.find(s => s.id === id) || SETS[0]; store.set = set.id; save(); setSel.value = set.id; $("#own").hidden = set.id !== "own"; cur = null; buildOrder(false); showItem(false); if (set.id === "own") $("#ownText").focus(); }
+function chooseSet(id){ set = SETS.find(s => s.id === id) || SETS[0]; store.set = set.id; save(); setSel.value = set.id; $("#setTitle").textContent = set.title; $("#own").hidden = set.id !== "own"; cur = null; buildOrder(false); showItem(false); if (set.id === "own") $("#ownText").focus(); }
 function ownShow(){
   const t = $("#ownText").value.trim(); if (!t) return;
   const k = norm(t), w = DATA.words[k], ph = DATA.phrases.find(p => norm(p.it) === k);
@@ -280,7 +286,12 @@ $("#reset").addEventListener("click", e => { const b = e.currentTarget; if (b.da
 document.addEventListener("keydown", e => { if (e.target.closest("input,select,textarea") || set.id === "own") return; if (e.key === "ArrowRight") $("#next").click(); else if (e.key === "ArrowLeft") $("#prev").click(); });
 if ("speechSynthesis" in window) try { speechSynthesis.getVoices(); } catch (e) {}
 envCheck();
-chooseSet(set.id);
+// Набор по адресу: тетрадь открывает тренажёр ссылкой вида …/#u0-ua (юнит-раздел); неизвестный id — последний выбранный набор.
+const fromHash = () => { let id = ""; try { id = decodeURIComponent(location.hash.slice(1)); } catch (e) {} return SETS.some(st => st.id === id) ? id : ""; };
+// Открыто из тетради: показываем только набор раздела, без выбора других наборов (режим «locked»).
+const lockTo = id => { document.body.classList.toggle("locked", !!id); if (id) chooseSet(id); };
+lockTo(fromHash()); if (!fromHash()) chooseSet(set.id);
+window.addEventListener("hashchange", () => lockTo(fromHash()));
 </script>
 </body>
 </html>
