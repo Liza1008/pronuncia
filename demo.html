@@ -89,7 +89,7 @@ footer{color:var(--muted);font-size:.85rem;margin-top:28px;line-height:1.5}
   </section>
   <footer>
     <p>Как проверяется: ответ сравнивается с несколькими допустимыми вариантами. Слова-омофоны (è/e, ha/a), цифры вместо числительных и пропущенные знаки ударения при устном ответе не считаются ошибкой. Одно неверное или пропущенное слово даёт «почти» с подсветкой, где расходится. В заданиях с именем, городом или числом подходит любое своё значение.</p>
-    <p>В демо ответы озвучивает голос системы (нужен итальянский голос в Chrome), в рабочей версии будут записи Elsa. Язык заданий в рабочей версии следует языку тетради (ru/en/uk).</p>
+    <p>Образцы и вопросы озвучены голосом it-IT Elsa, как в тетради. Язык заданий в рабочей версии следует языку тетради (ru/en/uk).</p>
   </footer>
 </div>
 <script>
@@ -196,10 +196,22 @@ const variants = it => mode === "qa" ? it.ok : it.it;
 const sample = it => mode === "qa" ? it.sample : it.it[0];
 const id = () => `${mode}:${idx}`;
 
-// ---- озвучка (голос системы)
+// ---- озвучка: записи Elsa (audio/demo.mp3, карта {фраза: [старт мс, длительность мс]}); голос системы только если клипа нет
+const DEMO_AUDIO = {"ciao! mi chiamo anna.":[0,2184],"piacere.":[2184,1080],"come ti chiami?":[3264,1272],"sono ucraina.":[4536,1872],"di dove sei?":[6408,1872],"ho ventisette anni.":[8280,1872],"quanti anni hai?":[10152,1872],"abito a roma.":[12024,1872],"studio l'italiano da due mesi.":[13896,2328],"questa è maria, è italiana.":[16224,2568],"è alto e simpatico.":[18792,1920],"ha i capelli lunghi.":[20712,1608],"buongiorno, signora rossi, come sta?":[22320,3600],"scusa, dov'è la fermata?":[25920,2400],"come si scrive?":[28320,1872],"a domani!":[30192,1872],"mi chiamo anna.":[32064,1368],"sono di kiev.":[33432,1872],"dove abiti?":[35304,1872],"da quanto tempo studi l'italiano?":[37176,2400],"come stai?":[39576,1872],"bene, grazie. e tu?":[41448,2544]};
+const NAME = "Anna";
+let player = null, stopAt = 0, stopTimer = 0, mediaUrl = null;
+function mediaSrc(){ if (mediaUrl) return mediaUrl; const url = "audio/demo.mp3"; if (typeof fetch !== "function" || typeof URL === "undefined" || !URL.createObjectURL) return mediaUrl = Promise.resolve(url); return mediaUrl = fetch(url).then(r => { if (!r.ok) throw new Error(String(r.status)); return r.blob(); }).then(b => URL.createObjectURL(b)).catch(() => url); }
+function getPlayer(){ if (!player) { player = new Audio(); player.preload = "auto"; player.addEventListener("timeupdate", () => { if (stopAt && player.currentTime * 1000 >= stopAt) stopClip(); }); } return player; }
+function stopClip(){ clearTimeout(stopTimer); stopAt = 0; if (player && !player.paused) player.pause(); }
+function clip(seg){
+  const p = getPlayer(); stopClip();
+  const go = () => { stopAt = seg[0] + seg[1]; p.currentTime = seg[0] / 1000; const pr = p.play(); (pr && pr.then ? pr : Promise.resolve()).then(() => { stopTimer = setTimeout(stopClip, seg[1] + 80); }).catch(() => { stopAt = 0; }); };
+  if (!p.dataset.ready) { p.dataset.ready = "1"; mediaSrc().then(src => { p.src = src; p.addEventListener("loadedmetadata", go, { once:true }); p.load(); }); } else go();
+}
+const clipOf = t => DEMO_AUDIO[String(t).toLowerCase().replace(/[’‘]/g, "'")];
 let itVoice = null;
 function pickVoice(){ try { itVoice = speechSynthesis.getVoices().find(v => /^it([-_]|$)/i.test(v.lang)) || null; } catch (e) {} }
-function speak(t){ if (!("speechSynthesis" in window)) return; try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = "it-IT"; if (itVoice) u.voice = itVoice; u.rate = 0.85; speechSynthesis.speak(u); } catch (e) {} }
+function speak(t){ const seg = clipOf(t); if (seg) { if ("speechSynthesis" in window) try { speechSynthesis.cancel(); } catch (e) {} clip(seg); return; } if (!("speechSynthesis" in window)) return; try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = "it-IT"; if (itVoice) u.voice = itVoice; u.rate = 0.85; speechSynthesis.speak(u); } catch (e) {} }
 if ("speechSynthesis" in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 
 // ---- распознавание (как в тренажёре)
@@ -215,7 +227,7 @@ function abortRec(){ if (rec) { try { rec.onend = null; rec.abort(); } catch (e)
 function listen(){
   if (!SR) return;
   if (listening) { abortRec(); return; }
-  if ("speechSynthesis" in window) try { speechSynthesis.cancel(); } catch (e) {}
+  stopClip(); if ("speechSynthesis" in window) try { speechSynthesis.cancel(); } catch (e) {}
   result.hidden = true; interim.textContent = "";
   const r = new SR(); rec = r; r.lang = "it-IT"; r.interimResults = true; r.maxAlternatives = 5; r.continuous = false;
   let finals = null, lastInterim = "", failed = false;
@@ -250,7 +262,7 @@ function grade(answers, spoken){
 function show(r, code, heard, spoken){
   result.hidden = false; result.className = "result " + (r.st === "empty" ? "" : r.st); $("#again").hidden = r.st === "ok";
   const it = cur(), vs = variants(it), h = heard != null ? `«${esc(heard)}»` : "";
-  if (r.st === "empty") { result.innerHTML = `<b>${spoken === false ? "Пусто." : "Ничего не распознано."}</b> ${spoken === false ? "Напишите ответ и нажмите «Проверить»." : "Нажмите кнопку и сразу говорите."}${code ? ` <span class="alts">(${esc(code)})</span>` : ""}`; return; }
+  if (r.st === "empty") { result.innerHTML = `<b>${spoken === false ? "Пусто." : "Ничего не распознано."}</b> ${spoken === false ? "Напишите ответ и нажмите «Проверить»." : "Нажмите кнопку, дождитесь красного «Слушаю…» и сразу говорите. Если повторяется, <a href='mic.html'>проверьте микрофон</a>."}${code ? ` <span class="alts">(${esc(code)})</span>` : ""}`; return; }
   if (r.st === "ok") { result.innerHTML = `<b>✓ Верно</b>${heard && norm(heard) !== norm(r.v) ? ` · ${spoken ? "распознано" : "ответ"} ${h}` : ""}${mode === "qa" ? ` <span class="alts">Пример ответа: ${esc(it.sample)}</span>` : ""}`; return; }
   if (r.st === "near") {
     const why = r.note === "accent" ? "Проверьте знак ударения или апостроф." : "Одно слово расходится с образцом, оно подчёркнуто.";
@@ -280,7 +292,7 @@ $$(".tab").forEach(t => t.addEventListener("click", () => setMode(t.dataset.mode
 $("#next").addEventListener("click", () => { idx = (idx + 1) % list().length; render(); });
 $("#prev").addEventListener("click", () => { idx = (idx - 1 + list().length) % list().length; render(); });
 $("#hint").addEventListener("click", () => { hintLevel = Math.min(3, hintLevel + 1); $("#hintline").innerHTML = skeleton(sample(cur()), hintLevel); $("#hint").textContent = hintLevel >= 3 ? "💡 Подсказка показана" : hintLevel === 2 ? "💡 Показать ответ" : "💡 Ещё подсказка"; });
-$("#play").addEventListener("click", () => { abortRec(); speak(mode === "qa" ? cur().q : sample(cur()).replace(/\*/g, "")); });
+$("#play").addEventListener("click", () => { abortRec(); stopClip(); speak(mode === "qa" ? cur().q : sample(cur()).replace(/\*/g, NAME)); });
 micBtn.addEventListener("click", listen);
 $("#again").addEventListener("click", () => { if (mode === "write") { $("#answer").value = ""; result.hidden = true; $("#answer").focus(); } else listen(); });
 const checkWritten = () => { const v = $("#answer").value; if (!v.trim()) { show({ st:"empty" }, "", "", false); return; } const r = judge(v, variants(cur()), false); store.tries[id()] = (store.tries[id()] || 0) + 1; if (r.st === "ok") store.ok[id()] = true; save(); show(r, "", v, false); paintProgress(); };

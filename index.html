@@ -93,7 +93,7 @@ footer{color:var(--muted);font-size:.85rem;margin-top:28px;line-height:1.5}
   <div class="list" id="list"></div>
   <footer>
     <p>Распознаёт речь сам браузер: в Chrome это сервис Google, в Edge — Microsoft, поэтому нужен интернет. Это проверка «понял ли итальянский распознаватель именно это слово», а не оценка акцента: открытые и закрытые гласные он не различает, а двойные согласные ловит не всегда.</p>
-    <p>Образцы озвучены голосом it-IT Elsa, как в «Quaderno d'italiano». <button type="button" class="btn" id="reset">Сбросить отметки</button></p>
+    <p>Образцы озвучены голосом it-IT Elsa, как в «Quaderno d'italiano». <button type="button" class="btn" id="reset">Сбросить галочки у слов</button></p>
   </footer>
 </div>
 <script>
@@ -224,7 +224,7 @@ function judge(alts){
 }
 function show(st, r){
   result.hidden = false; result.className = "result " + (st === "empty" ? "" : st); $("#again").hidden = st === "ok";
-  if (st === "empty") { result.innerHTML = `<b>Ничего не распознано.</b> Нажмите кнопку и сразу произнесите слово, не делая паузы.${typeof r === "string" ? ` <span class="alts">(${esc(r)})</span>` : ""}`; return; }
+  if (st === "empty") { result.innerHTML = `<b>Ничего не распознано.</b> Нажмите кнопку, дождитесь красного «Слушаю…» и сразу произнесите слово. Если повторяется, <a href='mic.html'>проверьте микрофон</a>.${typeof r === "string" ? ` <span class="alts">(${esc(r)})</span>` : ""}`; return; }
   const heard = `«${esc(r.heard)}»`;
   if (st === "ok") result.innerHTML = `<b>✓ Верно</b>${r.note === "accent" ? ` · распознано как ${heard}: знак ударения распознаватель часто опускает` : r.note === "extra" ? ` · услышано ${heard}` : r.heard && norm(r.heard) !== norm(cur.it) ? ` · распознано как ${heard}` : ""}`;
   else if (st === "near") result.innerHTML = `<b>≈ Почти.</b> Распознано ${heard}. ${r.note === "double-missing" ? "Не прозвучала двойная согласная: произнесите её дольше, с короткой задержкой." : r.note === "double-extra" ? "Прозвучала двойная согласная там, где нужна одна." : "Послушайте образец и повторите."}`;
@@ -282,7 +282,7 @@ $("#prev").addEventListener("click", () => { if (!order.length) return; idx = (i
 $("#list").addEventListener("click", e => { const b = e.target.closest(".chip[data-i]"); if (!b) return; idx = +b.dataset.i; showItem(true); });
 $("#ownGo").addEventListener("click", ownShow);
 $("#ownText").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); ownShow(); } });
-$("#reset").addEventListener("click", e => { const b = e.currentTarget; if (b.dataset.arm) { store.ok = {}; store.tries = {}; save(); delete b.dataset.arm; b.textContent = "Сбросить отметки"; buildOrder(true); showItem(false); } else { b.dataset.arm = "1"; b.textContent = "Точно сбросить? Нажмите ещё раз"; setTimeout(() => { delete b.dataset.arm; b.textContent = "Сбросить отметки"; }, 4000); } });
+$("#reset").addEventListener("click", e => { const b = e.currentTarget; if (b.dataset.arm) { store.ok = {}; store.tries = {}; save(); delete b.dataset.arm; b.textContent = "Сбросить галочки у слов"; buildOrder(true); showItem(false); } else { b.dataset.arm = "1"; b.textContent = "Точно сбросить? Нажмите ещё раз"; setTimeout(() => { delete b.dataset.arm; b.textContent = "Сбросить галочки у слов"; }, 4000); } });
 document.addEventListener("keydown", e => { if (e.target.closest("input,select,textarea") || set.id === "own") return; if (e.key === "ArrowRight") $("#next").click(); else if (e.key === "ArrowLeft") $("#prev").click(); });
 if ("speechSynthesis" in window) try { speechSynthesis.getVoices(); } catch (e) {}
 envCheck();

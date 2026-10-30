@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow"><title>Проверка микрофона</title>
+<style>
+:root{--paper:#f3f5f9;--card:#fff;--ink:#17202d;--muted:#5a6577;--rule:#dce2ea;--accent:#2347c4;--on-accent:#fff;--ok:#17794a;--bad:#b8322a;--near:#9a6500}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#0f141b;--card:#161d27;--ink:#e4e9f1;--muted:#97a3b5;--rule:#283241;--accent:#8ca9ff;--on-accent:#0d1320;--ok:#55c78d;--bad:#ff7f74;--near:#f0b64a;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#0f141b;--card:#161d27;--ink:#e4e9f1;--muted:#97a3b5;--rule:#283241;--accent:#8ca9ff;--on-accent:#0d1320;--ok:#55c78d;--bad:#ff7f74;--near:#f0b64a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.4rem;margin:0 0 6px}
+p{margin:6px 0}
+.muted{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:16px;margin:14px 0}
+.row{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--rule)}
+.row:last-child{border-bottom:0}
+.row b{font-weight:600}
+.yes{color:var(--ok);font-weight:600} .no{color:var(--bad);font-weight:600} .maybe{color:var(--near);font-weight:600}
+.btn{font:inherit;font-size:1rem;padding:12px 18px;border-radius:12px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);cursor:pointer;margin:6px 8px 6px 0}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn[disabled]{opacity:.5}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:10px;font-size:.85rem;min-height:80px;margin:10px 0 0}
+.big{font-size:1.1rem;padding:10px 12px;border-radius:10px;margin-top:10px;border:1px solid var(--rule)}
+.big.ok{border-color:var(--ok);color:var(--ok)} .big.bad{border-color:var(--bad);color:var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Проверка микрофона</h1><p><a href="index.html">← К тренажёру</a> · <a href="demo.html">← К демо</a></p>
+  <p class="muted">Эта страница ничего не записывает и не сохраняет. Она проверяет, даёт ли браузер этому сайту доступ к микрофону и распознаванию речи. Нажмите обе кнопки, разрешите микрофон, если спросит, скажите что-нибудь по-итальянски. Если что-то красное, пришлите скриншот всей страницы.</p>
+  <div class="card" id="env"></div>
+  <div class="card">
+    <button type="button" class="btn" id="sr">1. Распознавание речи (it-IT)</button>
+    <button type="button" class="btn ghost" id="gum">2. Микрофон напрямую</button>
+    <div class="big" id="verdict" hidden></div>
+    <pre id="log">Журнал появится здесь.</pre>
+  </div>
+</div>
+<script>
+const $ = s => document.querySelector(s), log = $("#log"), env = $("#env");
+const lines = [];
+const t0 = Date.now();
+function put(msg){ lines.push(`+${((Date.now() - t0) / 1000).toFixed(1)}s ${msg}`); log.textContent = lines.join("\n"); }
+function row(k, v, cls){ env.insertAdjacentHTML("beforeend", `<div class="row"><span>${k}</span><b class="${cls || ""}">${v}</b></div>`); }
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+const inFrame = (() => { try { return window.top !== window; } catch (e) { return true; } })();
+row("Адрес страницы", location.origin.replace(/^https?:\/\//, ""));
+row("Открыта внутри другой страницы (iframe)", inFrame ? "да" : "нет");
+row("Защищённый контекст (https)", window.isSecureContext ? "да" : "нет", window.isSecureContext ? "yes" : "no");
+let fp = "неизвестно (браузер не сообщает)", fpc = "maybe";
+try { const p = document.featurePolicy || document.permissionsPolicy; if (p && p.allowsFeature) { const a = p.allowsFeature("microphone"); fp = a ? "разрешён" : "запрещён политикой"; fpc = a ? "yes" : "no"; } } catch (e) {}
+row("Микрофон по политике страницы", fp, fpc);
+row("Распознавание речи в браузере", SR ? "есть" : "нет", SR ? "yes" : "no");
+row("getUserMedia (прямой доступ к микрофону)", navigator.mediaDevices && navigator.mediaDevices.getUserMedia ? "есть" : "нет", navigator.mediaDevices && navigator.mediaDevices.getUserMedia ? "yes" : "no");
+if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name:"microphone" }).then(p => row("Состояние разрешения на микрофон", p.state, p.state === "granted" ? "yes" : p.state === "denied" ? "no" : "maybe")).catch(e => row("Состояние разрешения на микрофон", "не удалось узнать: " + (e && e.message || e), "maybe"));
+row("Браузер", navigator.userAgent.replace(/^Mozilla\/5\.0 /, "").slice(0, 90));
+const verdict = (ok, text) => { const v = $("#verdict"); v.hidden = false; v.className = "big " + (ok ? "ok" : "bad"); v.textContent = text; };
+$("#sr").addEventListener("click", () => {
+  if (!SR) { put("SpeechRecognition недоступен в этом браузере"); verdict(false, "Распознавания речи здесь нет (Firefox? старый браузер?)"); return; }
+  put("запускаю SpeechRecognition, lang=it-IT…");
+  const r = new SR(); r.lang = "it-IT"; r.interimResults = true; r.maxAlternatives = 3;
+  let got = false;
+  r.onstart = () => put("onstart: слушает, говорите по-итальянски");
+  r.onaudiostart = () => put("onaudiostart: звук пошёл");
+  r.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++) { const res = e.results[i]; const alts = []; for (let k = 0; k < res.length; k++) alts.push(res[k].transcript); put((res.isFinal ? "РЕЗУЛЬТАТ: " : "промежуточно: ") + alts.join(" | ")); if (res.isFinal) { got = true; verdict(true, "Распознавание работает: «" + alts[0] + "»"); } } };
+  r.onerror = e => { put("onerror: " + (e && e.error) + (e && e.message ? " — " + e.message : "")); if (e && e.error === "not-allowed") verdict(false, "Ошибка not-allowed: доступ к микрофону для этой страницы закрыт"); else if (e && e.error === "no-speech") verdict(false, "Микрофон открылся, но речи не услышано: попробуйте ещё раз и говорите сразу"); else verdict(false, "Ошибка: " + (e && e.error)); };
+  r.onend = () => put("onend" + (got ? "" : " (результата не было)"));
+  try { r.start(); } catch (e) { put("start() бросил исключение: " + (e && e.message || e)); verdict(false, "Не удалось запустить: " + (e && e.message || e)); }
+});
+$("#gum").addEventListener("click", async () => {
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) { put("getUserMedia недоступен"); verdict(false, "Прямого доступа к микрофону в этом браузере нет"); return; }
+  put("запрашиваю getUserMedia({audio:true})…");
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ audio:true });
+    const tr = s.getAudioTracks()[0];
+    put("микрофон открыт: " + (tr && tr.label || "без названия"));
+    verdict(true, "Прямой доступ к микрофону есть: " + (tr && tr.label || "устройство без названия"));
+    s.getTracks().forEach(t => t.stop()); put("микрофон закрыт");
+  } catch (e) { put("ошибка: " + (e && e.name) + " — " + (e && e.message)); verdict(false, "Микрофон не дали: " + (e && e.name) + (e && e.message ? " (" + e.message + ")" : "")); }
+});
+</script>
+</body>
+</html>
