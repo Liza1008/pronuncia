@@ -209,10 +209,11 @@ function envCheck(){
 }
 // Safari сам не заканчивает запись и может не прислать итог: попытку завершают пауза, кнопка или страховочные таймеры.
 const SILENCE_MS = 1800, NO_SOUND_MS = 10000, STOP_WAIT_MS = 1200, MAX_MS = 10000;
-const VERSION = "30.10-4", DEBUG = new URLSearchParams(location.search).has("debug");
+const VERSION = "30.10-5", DEBUG = new URLSearchParams(location.search).has("debug");
 const verEl = document.createElement("p"); verEl.className = "ver"; verEl.textContent = "Версия " + VERSION; document.body.appendChild(verEl);
+const who = () => { const d = navigator.userAgentData, b = d && d.brands ? d.brands.map(x => x.brand).filter(x => !x.includes("Not")).join(", ") : ""; return (b ? b + " · " : "") + navigator.userAgent.replace("Mozilla/5.0 ", "").slice(0, 120); };
 let traceEl = null;
-function traceShow(lines){ if (!traceEl) { traceEl = document.createElement("pre"); traceEl.className = "trace"; interim.after(traceEl); } traceEl.textContent = "версия " + VERSION + "\n" + lines.join("\n"); }
+function traceShow(lines){ if (!traceEl) { traceEl = document.createElement("pre"); traceEl.className = "trace"; interim.after(traceEl); } traceEl.textContent = "версия " + VERSION + "\n" + who() + "\n" + lines.join("\n"); }
 let finishRec = null, cancelRec = null;
 const once = t => { const w = String(t).trim().split(" ").filter(Boolean), n = w.length, low = x => x.toLowerCase(); for (let p = 2; p <= n / 2; p++) if (n % p === 0 && w.every((x, i) => low(x) === low(w[i % p]))) return w.slice(0, p).join(" "); return t; };
 function setListening(on){ listening = on; micBtn.classList.toggle("listening", on); micLabel.textContent = on ? "Слушаю… говорите" : "Сказать"; }

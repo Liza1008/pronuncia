@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Говорение и письмо — демо</title>
+<title>Разговор и письмо — демо</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Literata:opsz,wght@7..72,400;7..72,600;7..72,700&display=swap">
 <style>
 :root{--paper:#f3f5f9;--card:#fff;--ink:#17202d;--muted:#5a6577;--rule:#dce2ea;--accent:#2347c4;--accent-soft:#e8edfb;--on-accent:#fff;--ok:#17794a;--ok-soft:#e3f3ea;--bad:#b8322a;--bad-soft:#fbe7e5;--near:#9a6500;--near-soft:#fff3d6;--shadow:rgba(20,30,50,.14);--font-ui:"Golos Text",system-ui,sans-serif;--font-serif:"Literata",Georgia,serif}
@@ -64,7 +64,7 @@ footer{color:var(--muted);font-size:.85rem;margin-top:28px;line-height:1.5}
 <body>
 <div class="wrap">
   <header class="head">
-    <div><h1>Говорение и письмо</h1><p class="sub">Демо трёх типов заданий. Фраза даётся по-русски, ответ нужен по-итальянски: голосом или текстом.</p></div>
+    <div><h1>Разговор и письмо</h1><p class="sub">Демо трёх типов заданий. Фраза даётся по-русски, ответ нужен по-итальянски: голосом или текстом.</p></div>
     <a class="btn ghost" href="https://claude.ai/artifact/2dHceWUgiBVyDRLb81RwQ5">← В тетрадь</a>
   </header>
   <div class="notice" id="notice" hidden role="status"></div>
@@ -245,10 +245,11 @@ else if (badBrowser()) { note(NO_SR_SERVICE + " Письменные задан�
 else if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name:"microphone" }).then(p => { if (p.state === "denied") note(micDenied(), true); }).catch(() => {});
 // Safari сам не заканчивает запись и может не прислать итог: попытку завершают пауза, кнопка или страховочные таймеры.
 const SILENCE_MS = 2500, NO_SOUND_MS = 10000, STOP_WAIT_MS = 1200, MAX_MS = 20000;
-const VERSION = "30.10-4", DEBUG = new URLSearchParams(location.search).has("debug");
+const VERSION = "30.10-5", DEBUG = new URLSearchParams(location.search).has("debug");
 const verEl = document.createElement("p"); verEl.className = "ver"; verEl.textContent = "Версия " + VERSION; document.body.appendChild(verEl);
+const who = () => { const d = navigator.userAgentData, b = d && d.brands ? d.brands.map(x => x.brand).filter(x => !x.includes("Not")).join(", ") : ""; return (b ? b + " · " : "") + navigator.userAgent.replace("Mozilla/5.0 ", "").slice(0, 120); };
 let traceEl = null;
-function traceShow(lines){ if (!traceEl) { traceEl = document.createElement("pre"); traceEl.className = "trace"; interim.after(traceEl); } traceEl.textContent = "версия " + VERSION + "\n" + lines.join("\n"); }
+function traceShow(lines){ if (!traceEl) { traceEl = document.createElement("pre"); traceEl.className = "trace"; interim.after(traceEl); } traceEl.textContent = "версия " + VERSION + "\n" + who() + "\n" + lines.join("\n"); }
 let finishRec = null, cancelRec = null;
 const once = t => { const w = String(t).trim().split(" ").filter(Boolean), n = w.length, low = x => x.toLowerCase(); for (let p = 2; p <= n / 2; p++) if (n % p === 0 && w.every((x, i) => low(x) === low(w[i % p]))) return w.slice(0, p).join(" "); return t; };
 function setListening(on){ listening = on; micBtn.classList.toggle("listening", on); micLabel.textContent = on ? "Слушаю… говорите" : "Сказать"; }
