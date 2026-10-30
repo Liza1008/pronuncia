@@ -240,33 +240,54 @@ async function micProblem(){
 if (!SR) note("Этот браузер не умеет распознавать речь: устные задания не сработают. Откройте в <b>Chrome</b> или <b>Edge</b>. Письменные задания работают везде.", true);
 else if (badBrowser()) { note(NO_SR_SERVICE + " Письменные задания работают и здесь.", true); micBtn.disabled = true; }
 else if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name:"microphone" }).then(p => { if (p.state === "denied") note(micDenied(), true); }).catch(() => {});
+// Safari сам не заканчивает запись и может не прислать итог: попытку завершают пауза, кнопка или страховочные таймеры.
+const SILENCE_MS = 2500, NO_SOUND_MS = 10000, STOP_WAIT_MS = 1200;
+let finishRec = null, cancelRec = null;
+const once = t => { const w = String(t).trim().split(" ").filter(Boolean), h = w.length / 2; return h >= 2 && Number.isInteger(h) && w.slice(0, h).join(" ").toLowerCase() === w.slice(h).join(" ").toLowerCase() ? w.slice(0, h).join(" ") : t; };
 function setListening(on){ listening = on; micBtn.classList.toggle("listening", on); micLabel.textContent = on ? "Слушаю… говорите" : "Сказать"; }
-function abortRec(){ if (rec) { try { rec.onend = null; rec.abort(); } catch (e) {} rec = null; } setListening(false); }
+function abortRec(){ if (cancelRec) cancelRec(); if (rec) { try { rec.onend = null; rec.abort(); } catch (e) {} rec = null; } setListening(false); interim.textContent = ""; }
 function listen(){
   if (!SR) return;
-  if (listening) { abortRec(); return; }
+  if (rec) { if (finishRec) finishRec(); return; }
   stopClip(); if ("speechSynthesis" in window) try { speechSynthesis.cancel(); } catch (e) {}
   result.hidden = true; interim.textContent = "";
   const r = new SR(); rec = r; r.lang = "it-IT"; r.interimResults = true; r.maxAlternatives = 5; r.continuous = false;
-  let finals = null, lastInterim = "", failed = false, gotStart = false; const t0 = Date.now();
+  let finals = null, lastInterim = "", failed = false, gotStart = false, settled = false, finishing = false, quietT = 0, stopT = 0; const t0 = Date.now();
+  const clearTimers = () => { clearTimeout(quietT); clearTimeout(stopT); };
+  const settle = () => {
+    if (settled) return; settled = true; clearTimers(); if (rec === r) rec = null; setListening(false); interim.textContent = "";
+    if (finals) grade(finals.map(once), true);
+    else if (failed) return;
+    else if (lastInterim) grade([once(lastInterim)], true);
+    else if (!gotStart && Date.now() - t0 < 1500) note(NO_SR_SERVICE, true);
+    else show({ st:"empty" });
+  };
+  const finish = () => { if (settled || finishing) return; finishing = true; clearTimers(); try { r.stop(); } catch (e) {} stopT = setTimeout(() => { try { r.abort(); } catch (e) {} settle(); }, STOP_WAIT_MS); };
+  finishRec = () => { if (lastInterim) finish(); else abortRec(); };
+  cancelRec = () => { settled = true; clearTimers(); };
+  quietT = setTimeout(finish, NO_SOUND_MS);
   r.onstart = () => { gotStart = true; notice.hidden = true; setListening(true); }; r.onaudiostart = () => { gotStart = true; };
   r.onresult = e => {
+    if (settled) return;
     for (let i = e.resultIndex || 0; i < e.results.length; i++) {
       const res = e.results[i], alts = []; for (let k = 0; k < res.length; k++) alts.push(res[k].transcript);
       if (res.isFinal) finals = (finals || []).concat(alts); else lastInterim = alts[0] || lastInterim;
     }
     interim.textContent = finals ? "" : lastInterim;
-    if (finals) { grade(finals, true); try { r.stop(); } catch (e) {} }
+    if (finals) { settle(); try { r.stop(); } catch (e) {} } else if (!finishing) { clearTimeout(quietT); quietT = setTimeout(finish, SILENCE_MS); }
   };
   r.onerror = e => {
-    failed = true; interim.textContent = ""; const code = e && e.error;
+    if (settled) return; const code = e && e.error;
+    if (lastInterim && code !== "not-allowed" && code !== "service-not-allowed") { settle(); return; }
+    failed = true;
     if (code === "not-allowed" || code === "service-not-allowed") micProblem();
     else if (code === "audio-capture") note("Микрофон не найден.", true);
     else if (code === "network") note("Распознавание не работает без интернета.", true);
     else if (code !== "aborted") show({ st:"empty" }, code);
+    settle();
   };
-  r.onend = () => { rec = null; setListening(false); if (!finals && !failed) { if (!gotStart && Date.now() - t0 < 1500) note(NO_SR_SERVICE, true); else if (lastInterim) grade([lastInterim], true); else show({ st:"empty" }); } };
-  try { r.start(); } catch (e) { setListening(false); show({ st:"empty" }); }
+  r.onend = settle;
+  try { r.start(); } catch (e) { cancelRec(); rec = null; setListening(false); show({ st:"empty" }); }
 }
 // лучший результат среди альтернатив распознавания
 function grade(answers, spoken){

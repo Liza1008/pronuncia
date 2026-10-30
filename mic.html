@@ -74,10 +74,10 @@ $("#sr").addEventListener("click", () => {
   if (!SR) { put("SpeechRecognition недоступен в этом браузере"); verdict(false, "Распознавания речи здесь нет (Firefox? старый браузер?)"); return; }
   put("запускаю SpeechRecognition, lang=it-IT…");
   const r = new SR(); r.lang = "it-IT"; r.interimResults = true; r.maxAlternatives = 3;
-  let got = false;
+  let got = false, quiet = 0;
   r.onstart = () => put("onstart: слушает, говорите по-итальянски");
   r.onaudiostart = () => put("onaudiostart: звук пошёл");
-  r.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++) { const res = e.results[i]; const alts = []; for (let k = 0; k < res.length; k++) alts.push(res[k].transcript); put((res.isFinal ? "РЕЗУЛЬТАТ: " : "промежуточно: ") + alts.join(" | ")); if (res.isFinal) { got = true; verdict(true, "Распознавание работает: «" + alts[0] + "»"); } } };
+  r.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++) { const res = e.results[i]; const alts = []; for (let k = 0; k < res.length; k++) alts.push(res[k].transcript); put((res.isFinal ? "РЕЗУЛЬТАТ: " : "промежуточно: ") + alts.join(" | ")); if (!res.isFinal) { clearTimeout(quiet); quiet = setTimeout(() => { if (got) return; got = true; put("пауза: завершаю попытку, Safari сам её не заканчивает"); verdict(true, "Распознавание работает: «" + alts[0] + "»"); try { r.stop(); } catch (e) {} }, 2500); } if (res.isFinal) { got = true; verdict(true, "Распознавание работает: «" + alts[0] + "»"); } } };
   r.onerror = e => { put("onerror: " + (e && e.error) + (e && e.message ? " — " + e.message : "")); if (e && (e.error === "not-allowed" || e.error === "service-not-allowed")) { verdict(false, "Ошибка " + e.error + ": доступ к микрофону для этой страницы закрыт"); if (PHONE) explainRefusal(); } else if (e && e.error === "no-speech") verdict(false, "Микрофон открылся, но речи не услышано: попробуйте ещё раз и говорите сразу"); else verdict(false, "Ошибка: " + (e && e.error)); };
   r.onend = () => { put("onend" + (got ? "" : " (результата не было)")); if (!got && $("#verdict").hidden) verdict(false, badBrowser ? "В Opera и Brave сервиса распознавания речи нет, хотя кнопка есть: откройте эту страницу в Chrome или Edge" : "Распознавание завершилось без результата: попробуйте ещё раз и говорите сразу"); };
   try { r.start(); } catch (e) { put("start() бросил исключение: " + (e && e.message || e)); verdict(false, "Не удалось запустить: " + (e && e.message || e)); }
