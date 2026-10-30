@@ -280,7 +280,7 @@ else if (noService()) note(t("noService"), true);
 else if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name:"microphone" }).then(p => { if (p.state === "denied") note(micDenied(), true); }).catch(() => {});
 // Safari сам не заканчивает запись и может не прислать итог: попытку завершают пауза, кнопка или страховочные таймеры.
 const SILENCE_MS = 2500, NO_SOUND_MS = 10000, STOP_WAIT_MS = 1200, MAX_MS = 20000;
-const VERSION = "30.10-12", DEBUG = params.has("debug");
+const VERSION = "30.10-13", DEBUG = params.has("debug");
 const verEl = document.createElement("p"); verEl.className = "ver"; verEl.textContent = t("version") + " " + VERSION; document.body.appendChild(verEl);
 const who = () => { const d = navigator.userAgentData, b = d && d.brands ? d.brands.map(x => x.brand).filter(x => !x.includes("Not")).join(", ") : ""; return (b ? b + " · " : "") + navigator.userAgent.replace("Mozilla/5.0 ", "").slice(0, 120); };
 let traceEl = null;
