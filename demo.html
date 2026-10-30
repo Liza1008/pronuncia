@@ -227,6 +227,7 @@ const PHONE = /Android/i.test(navigator.userAgent);
 const micDenied = () => PHONE ? `Chrome запретил этому сайту микрофон. Нажмите ⋮ справа от адреса, затем «Настройки», «Настройки сайта», «Микрофон». Выберите «Разрешить сайтам запрашивать доступ…», а в списке заблокированных нажмите <b>${location.hostname}</b> и выберите «Разрешить». Потом перезагрузите страницу.` : "Доступ к микрофону запрещён. Нажмите значок слева от адреса страницы, разрешите микрофон и перезагрузите страницу.";
 const MIC_APP = "Телефон не даёт Chrome микрофон. Откройте настройки телефона, затем «Приложения», <b>Chrome</b>, «Разрешения», «Микрофон» и выберите «Разрешить». Потом перезагрузите страницу.";
 const MIC_SERVICE = "Сайту микрофон разрешён, отказала служба распознавания речи Android. Откройте настройки телефона, затем «Приложения», <b>Речевые сервисы Google</b> (ещё она называется Speech Recognition &amp; Synthesis; если её нет в списке, включите показ всех или системных приложений), «Разрешения», «Микрофон» и выберите «Разрешить». На Android 11 и старше то же сделайте для приложения <b>Google</b>. Если разрешение уже есть, служба может быть занята: закройте голосовой ввод и помощников и нажмите «Сказать» ещё раз.";
+const netProblem = () => navigator.onLine === false ? "Нет интернета: браузер отправляет звук на сервер распознавания." : "Браузер не смог связаться со службой распознавания речи. Раз интернет есть, скорее всего, у этого браузера нет доступа к службе: так бывает в браузерах на движке Chrome, например в Dia. Откройте страницу в <b>Chrome</b> или <b>Edge</b>. Если это уже они, попробуйте отключить VPN. Письменные задания работают и здесь.";
 const micState = async () => { try { return (await navigator.permissions.query({ name:"microphone" })).state; } catch (e) { return ""; } };
 async function micProblem(){
   if (!PHONE) { note(micDenied(), true); return; }
@@ -244,7 +245,7 @@ else if (badBrowser()) { note(NO_SR_SERVICE + " Письменные задан�
 else if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name:"microphone" }).then(p => { if (p.state === "denied") note(micDenied(), true); }).catch(() => {});
 // Safari сам не заканчивает запись и может не прислать итог: попытку завершают пауза, кнопка или страховочные таймеры.
 const SILENCE_MS = 2500, NO_SOUND_MS = 10000, STOP_WAIT_MS = 1200, MAX_MS = 20000;
-const VERSION = "30.10-3", DEBUG = new URLSearchParams(location.search).has("debug");
+const VERSION = "30.10-4", DEBUG = new URLSearchParams(location.search).has("debug");
 const verEl = document.createElement("p"); verEl.className = "ver"; verEl.textContent = "Версия " + VERSION; document.body.appendChild(verEl);
 let traceEl = null;
 function traceShow(lines){ if (!traceEl) { traceEl = document.createElement("pre"); traceEl.className = "trace"; interim.after(traceEl); } traceEl.textContent = "версия " + VERSION + "\n" + lines.join("\n"); }
@@ -291,7 +292,7 @@ function listen(){
     failed = true;
     if (code === "not-allowed" || code === "service-not-allowed") micProblem();
     else if (code === "audio-capture") note("Микрофон не найден.", true);
-    else if (code === "network") note("Распознавание не работает без интернета.", true);
+    else if (code === "network") note(netProblem(), true);
     else if (code !== "aborted") show({ st:"empty" }, code);
     settle();
   };
