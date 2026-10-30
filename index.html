@@ -181,13 +181,15 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 let rec = null, listening = false;
 const micBtn = $("#mic"), micLabel = $("#micLabel"), interim = $("#interim"), result = $("#result"), notice = $("#notice");
 function note(html, bad){ notice.innerHTML = html; notice.classList.toggle("bad", !!bad); notice.hidden = false; }
-const NO_SR_SERVICE = "В этом браузере распознавание речи не работает: Opera, Brave и некоторые другие браузеры на движке Chrome не имеют сервиса распознавания, хотя кнопка есть. Откройте страницу в <b>Chrome</b> или <b>Edge</b>.";
+const NO_SR_SERVICE = "В этом браузере распознавание речи не работает: Opera, Brave, Dia и некоторые другие браузеры на движке Chrome не имеют сервиса распознавания, хотя кнопка есть. Откройте страницу в <b>Chrome</b>, <b>Edge</b> или <b>Safari</b>.";
 const badBrowser = () => /OPR\//.test(navigator.userAgent) || !!navigator.brave;
 const PHONE = /Android/i.test(navigator.userAgent);
+// Браузеры на движке Chrome без доступа к службе распознавания называют себя только Chromium (проверено на Dia). Кнопку не отключаем: признак косвенный.
+const noService = () => { const d = navigator.userAgentData; if (!d || !d.brands || d.mobile) return false; const b = d.brands.map(x => x.brand); return b.includes("Chromium") && !b.includes("Google Chrome") && !b.includes("Microsoft Edge"); };
 const micDenied = () => PHONE ? `Chrome запретил этому сайту микрофон. Нажмите ⋮ справа от адреса, затем «Настройки», «Настройки сайта», «Микрофон». Выберите «Разрешить сайтам запрашивать доступ…», а в списке заблокированных нажмите <b>${location.hostname}</b> и выберите «Разрешить». Потом перезагрузите страницу.` : "Доступ к микрофону запрещён. Нажмите значок слева от адреса страницы, разрешите микрофон и перезагрузите страницу.";
 const MIC_APP = "Телефон не даёт Chrome микрофон. Откройте настройки телефона, затем «Приложения», <b>Chrome</b>, «Разрешения», «Микрофон» и выберите «Разрешить». Потом перезагрузите страницу.";
 const MIC_SERVICE = "Сайту микрофон разрешён, отказала служба распознавания речи Android. Откройте настройки телефона, затем «Приложения», <b>Речевые сервисы Google</b> (ещё она называется Speech Recognition &amp; Synthesis; если её нет в списке, включите показ всех или системных приложений), «Разрешения», «Микрофон» и выберите «Разрешить». На Android 11 и старше то же сделайте для приложения <b>Google</b>. Если разрешение уже есть, служба может быть занята: закройте голосовой ввод и помощников и нажмите «Сказать» ещё раз.";
-const netProblem = () => navigator.onLine === false ? "Нет интернета: браузер отправляет звук на сервер распознавания." : "Браузер не смог связаться со службой распознавания речи. Раз интернет есть, скорее всего, у этого браузера нет доступа к службе: так бывает в браузерах на движке Chrome, например в Dia. Откройте страницу в <b>Chrome</b> или <b>Edge</b>. Если это уже они, попробуйте отключить VPN.";
+const netProblem = () => navigator.onLine === false ? "Нет интернета: браузер отправляет звук на сервер распознавания." : "Браузер не смог связаться со службой распознавания речи. Раз интернет есть, скорее всего, у этого браузера нет доступа к службе: так бывает в браузерах на движке Chrome, например в Dia. Откройте страницу в <b>Chrome</b>, <b>Edge</b> или <b>Safari</b>. Если это уже они, попробуйте отключить VPN.";
 const micState = async () => { try { return (await navigator.permissions.query({ name:"microphone" })).state; } catch (e) { return ""; } };
 async function micProblem(){
   if (!PHONE) { note(micDenied(), true); return; }
@@ -201,15 +203,16 @@ async function micProblem(){
   else note(MIC_SERVICE, true);
 }
 function envCheck(){
-  if (!SR) { note("Этот браузер не умеет распознавать речь. Откройте тренажёр в <b>Chrome</b> или <b>Edge</b>.", true); micBtn.disabled = true; return; }
+  if (!SR) { note("Этот браузер не умеет распознавать речь. Откройте тренажёр в <b>Chrome</b>, <b>Edge</b> или <b>Safari</b>.", true); micBtn.disabled = true; return; }
   if (badBrowser()) { note(NO_SR_SERVICE, true); micBtn.disabled = true; return; }
+  if (noService()) { note(NO_SR_SERVICE, true); return; }
   if (location.protocol === "file:") { note("Страница открыта как файл, а в этом режиме Chrome не включает распознавание речи (ошибка not-allowed). Закройте вкладку и запустите <code>start.cmd</code> из той же папки: он откроет тренажёр по адресу <code>http://127.0.0.1:8765</code>."); return; }
   if (window.isSecureContext === false) { note("Страница открыта по небезопасному адресу, и браузер не даст доступ к микрофону. Откройте её через <code>start.cmd</code> (адрес <code>http://127.0.0.1:8765</code>).", true); return; }
   if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name:"microphone" }).then(p => { if (p.state === "denied") note(micDenied(), true); }).catch(() => {});
 }
 // Safari сам не заканчивает запись и может не прислать итог: попытку завершают пауза, кнопка или страховочные таймеры.
 const SILENCE_MS = 1800, NO_SOUND_MS = 10000, STOP_WAIT_MS = 1200, MAX_MS = 10000;
-const VERSION = "30.10-5", DEBUG = new URLSearchParams(location.search).has("debug");
+const VERSION = "30.10-6", DEBUG = new URLSearchParams(location.search).has("debug");
 const verEl = document.createElement("p"); verEl.className = "ver"; verEl.textContent = "Версия " + VERSION; document.body.appendChild(verEl);
 const who = () => { const d = navigator.userAgentData, b = d && d.brands ? d.brands.map(x => x.brand).filter(x => !x.includes("Not")).join(", ") : ""; return (b ? b + " · " : "") + navigator.userAgent.replace("Mozilla/5.0 ", "").slice(0, 120); };
 let traceEl = null;
