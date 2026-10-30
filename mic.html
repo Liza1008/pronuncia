@@ -59,6 +59,16 @@ if (navigator.permissions && navigator.permissions.query) navigator.permissions.
 row("Браузер", navigator.userAgent.replace(/^Mozilla\/5\.0 /, "").slice(0, 90));
 const badBrowser = /OPR\//.test(navigator.userAgent) || !!navigator.brave;
 row("Сервис распознавания речи", badBrowser ? "нет: Opera/Brave не имеют сервиса, нужен Chrome или Edge" : "должен быть (Chrome: Google, Edge: Microsoft)", badBrowser ? "no" : "yes");
+const PHONE = /Android/i.test(navigator.userAgent);
+if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) navigator.userAgentData.getHighEntropyValues(["platformVersion", "model"]).then(v => row("Устройство", [navigator.userAgentData.platform, v.platformVersion, v.model].filter(Boolean).join(" "))).catch(() => {});
+// на Android not-allowed дают и запрет сайту, и приложение Chrome без разрешения, и служба распознавания
+async function explainRefusal(){
+  let st = "", mic = false;
+  try { st = (await navigator.permissions.query({ name:"microphone" })).state; } catch (e) {}
+  put("разрешение сайта: " + (st || "неизвестно"));
+  if (st !== "denied") try { const s = await navigator.mediaDevices.getUserMedia({ audio:true }); s.getTracks().forEach(t => t.stop()); mic = true; put("getUserMedia: микрофон открылся"); } catch (e) { put("getUserMedia: " + (e && e.name)); }
+  verdict(false, st === "denied" ? "Chrome запретил микрофон этому сайту: разрешите его в меню ⋮, «Настройки», «Настройки сайта», «Микрофон»" : mic ? "Микрофон работает, отказала служба распознавания Android: в настройках телефона разрешите микрофон приложению «Речевые сервисы Google»" : "Телефон не даёт Chrome микрофон: разрешите его в настройках телефона, «Приложения», Chrome, «Разрешения»");
+}
 const verdict = (ok, text) => { const v = $("#verdict"); v.hidden = false; v.className = "big " + (ok ? "ok" : "bad"); v.textContent = text; };
 $("#sr").addEventListener("click", () => {
   if (!SR) { put("SpeechRecognition недоступен в этом браузере"); verdict(false, "Распознавания речи здесь нет (Firefox? старый браузер?)"); return; }
@@ -68,7 +78,7 @@ $("#sr").addEventListener("click", () => {
   r.onstart = () => put("onstart: слушает, говорите по-итальянски");
   r.onaudiostart = () => put("onaudiostart: звук пошёл");
   r.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++) { const res = e.results[i]; const alts = []; for (let k = 0; k < res.length; k++) alts.push(res[k].transcript); put((res.isFinal ? "РЕЗУЛЬТАТ: " : "промежуточно: ") + alts.join(" | ")); if (res.isFinal) { got = true; verdict(true, "Распознавание работает: «" + alts[0] + "»"); } } };
-  r.onerror = e => { put("onerror: " + (e && e.error) + (e && e.message ? " — " + e.message : "")); if (e && e.error === "not-allowed") verdict(false, "Ошибка not-allowed: доступ к микрофону для этой страницы закрыт"); else if (e && e.error === "no-speech") verdict(false, "Микрофон открылся, но речи не услышано: попробуйте ещё раз и говорите сразу"); else verdict(false, "Ошибка: " + (e && e.error)); };
+  r.onerror = e => { put("onerror: " + (e && e.error) + (e && e.message ? " — " + e.message : "")); if (e && (e.error === "not-allowed" || e.error === "service-not-allowed")) { verdict(false, "Ошибка " + e.error + ": доступ к микрофону для этой страницы закрыт"); if (PHONE) explainRefusal(); } else if (e && e.error === "no-speech") verdict(false, "Микрофон открылся, но речи не услышано: попробуйте ещё раз и говорите сразу"); else verdict(false, "Ошибка: " + (e && e.error)); };
   r.onend = () => { put("onend" + (got ? "" : " (результата не было)")); if (!got && $("#verdict").hidden) verdict(false, badBrowser ? "В Opera и Brave сервиса распознавания речи нет, хотя кнопка есть: откройте эту страницу в Chrome или Edge" : "Распознавание завершилось без результата: попробуйте ещё раз и говорите сразу"); };
   try { r.start(); } catch (e) { put("start() бросил исключение: " + (e && e.message || e)); verdict(false, "Не удалось запустить: " + (e && e.message || e)); }
 });

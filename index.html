@@ -181,7 +181,22 @@ const micBtn = $("#mic"), micLabel = $("#micLabel"), interim = $("#interim"), re
 function note(html, bad){ notice.innerHTML = html; notice.classList.toggle("bad", !!bad); notice.hidden = false; }
 const NO_SR_SERVICE = "В этом браузере распознавание речи не работает: Opera, Brave и некоторые другие браузеры на движке Chrome не имеют сервиса распознавания, хотя кнопка есть. Откройте страницу в <b>Chrome</b> или <b>Edge</b>.";
 const badBrowser = () => /OPR\//.test(navigator.userAgent) || !!navigator.brave;
-const micDenied = () => "Доступ к микрофону запрещён. Нажмите значок слева от адреса страницы, разрешите микрофон и перезагрузите страницу.";
+const PHONE = /Android/i.test(navigator.userAgent);
+const micDenied = () => PHONE ? `Chrome запретил этому сайту микрофон. Нажмите ⋮ справа от адреса, затем «Настройки», «Настройки сайта», «Микрофон». Выберите «Разрешить сайтам запрашивать доступ…», а в списке заблокированных нажмите <b>${location.hostname}</b> и выберите «Разрешить». Потом перезагрузите страницу.` : "Доступ к микрофону запрещён. Нажмите значок слева от адреса страницы, разрешите микрофон и перезагрузите страницу.";
+const MIC_APP = "Телефон не даёт Chrome микрофон. Откройте настройки телефона, затем «Приложения», <b>Chrome</b>, «Разрешения», «Микрофон» и выберите «Разрешить». Потом перезагрузите страницу.";
+const MIC_SERVICE = "Сайту микрофон разрешён, отказала служба распознавания речи Android. Откройте настройки телефона, затем «Приложения», <b>Речевые сервисы Google</b> (ещё она называется Speech Recognition &amp; Synthesis; если её нет в списке, включите показ всех или системных приложений), «Разрешения», «Микрофон» и выберите «Разрешить». На Android 11 и старше то же сделайте для приложения <b>Google</b>. Если разрешение уже есть, служба может быть занята: закройте голосовой ввод и помощников и нажмите «Сказать» ещё раз.";
+const micState = async () => { try { return (await navigator.permissions.query({ name:"microphone" })).state; } catch (e) { return ""; } };
+async function micProblem(){
+  if (!PHONE) { note(micDenied(), true); return; }
+  const before = await micState();
+  if (before === "denied") { note(micDenied(), true); return; }
+  let mic = false;
+  try { const s = await navigator.mediaDevices.getUserMedia({ audio:true }); s.getTracks().forEach(t => t.stop()); mic = true; } catch (e) {}
+  if ((await micState()) === "denied") note(micDenied(), true);
+  else if (!mic) note(MIC_APP, true);
+  else if (before === "prompt") note("Микрофон разрешён. Нажмите «Сказать» ещё раз.");
+  else note(MIC_SERVICE, true);
+}
 function envCheck(){
   if (!SR) { note("Этот браузер не умеет распознавать речь. Откройте тренажёр в <b>Chrome</b> или <b>Edge</b>.", true); micBtn.disabled = true; return; }
   if (badBrowser()) { note(NO_SR_SERVICE, true); micBtn.disabled = true; return; }
@@ -198,7 +213,7 @@ function listen(){
   result.hidden = true; interim.textContent = "";
   const r = new SR(); rec = r; r.lang = "it-IT"; r.interimResults = true; r.maxAlternatives = 5; r.continuous = false;
   let finals = null, lastInterim = "", failed = false, gotStart = false; const t0 = Date.now();
-  r.onstart = () => { gotStart = true; setListening(true); }; r.onaudiostart = () => { gotStart = true; };
+  r.onstart = () => { gotStart = true; notice.hidden = true; setListening(true); }; r.onaudiostart = () => { gotStart = true; };
   r.onresult = e => {
     for (let i = e.resultIndex || 0; i < e.results.length; i++) {
       const res = e.results[i], alts = []; for (let k = 0; k < res.length; k++) alts.push(res[k].transcript);
@@ -210,7 +225,7 @@ function listen(){
   r.onerror = e => {
     failed = true; interim.textContent = "";
     const code = e && e.error;
-    if (code === "not-allowed" || code === "service-not-allowed") note(location.protocol === "file:" ? "Chrome не включает распознавание речи на странице, открытой как файл. Запустите <code>start.cmd</code> и откройте <code>http://127.0.0.1:8765</code>." : micDenied(), true);
+    if (code === "not-allowed" || code === "service-not-allowed") { if (location.protocol === "file:") note("Chrome не включает распознавание речи на странице, открытой как файл. Запустите <code>start.cmd</code> и откройте <code>http://127.0.0.1:8765</code>.", true); else micProblem(); }
     else if (code === "audio-capture") note("Микрофон не найден. Подключите микрофон и перезагрузите страницу.", true);
     else if (code === "network") note("Распознавание не работает без интернета: браузер отправляет звук на сервер распознавания.", true);
     else if (code === "no-speech") show("empty");
