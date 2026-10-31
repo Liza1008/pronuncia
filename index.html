@@ -138,11 +138,11 @@ if (DATA.rest.length) SETS.push({ id:"rest", title:`${t("setRest")} (${DATA.rest
 SETS.push({ id:"all", title:`${t("setAll")} (${DATA.all.length})`, items:DATA.all.map(wordItem) });
 SETS.push({ id:"phrases", title:`${t("setPhrases")} (${DATA.phrases.length})`, items:DATA.phrases.map(p => ({ id:"ph:" + p.it, it:p.it, tr:phraseTr(p), clip:p })) });
 SETS.push({ id:"own", title:t("setOwn"), items:[] });
-// Замки: набор раздела открыт, когда в предыдущем верно прочитана половина слов, но не больше 20. Без распознавания читать нельзя, поэтому и замков нет.
+// Замки: набор раздела открыт, когда в предыдущем верно прочитано 70 % слов, но не больше 20. Без распознавания читать нельзя, поэтому и замков нет.
 const SR_ON = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 const COURSE = SETS.filter(st => !["rest", "all", "phrases", "own"].includes(st.id));
 const okIn = st => st.items.filter(it => store.ok[it.id]).length;
-const needIn = st => Math.min(20, Math.ceil(st.items.length / 2));
+const needIn = st => Math.min(20, Math.ceil(st.items.length * 7 / 10));
 const blockerOf = st => { if (!SR_ON) return null; const k = st.id === "rest" || st.id === "all" ? COURSE.length : COURSE.indexOf(st); return k > 0 ? COURSE.slice(0, k).find(x => okIn(x) < needIn(x)) || null : null; };
 const setSel = $("#set");
 SETS.forEach(st => setSel.insertAdjacentHTML("beforeend", `<option value="${esc(st.id)}">${esc(st.title)}</option>`));
@@ -238,7 +238,7 @@ function envCheck(){
 }
 // Safari сам не заканчивает запись и может не прислать итог: попытку завершают пауза, кнопка или страховочные таймеры.
 const SILENCE_MS = 1800, NO_SOUND_MS = 10000, STOP_WAIT_MS = 1200, MAX_MS = 10000;
-const VERSION = "31.10-2", DEBUG = new URLSearchParams(location.search).has("debug");
+const VERSION = "31.10-3", DEBUG = new URLSearchParams(location.search).has("debug");
 const verEl = document.createElement("p"); verEl.className = "ver"; verEl.textContent = t("version") + " " + VERSION; document.body.appendChild(verEl);
 const who = () => { const d = navigator.userAgentData, b = d && d.brands ? d.brands.map(x => x.brand).filter(x => !x.includes("Not")).join(", ") : ""; return (b ? b + " · " : "") + navigator.userAgent.replace("Mozilla/5.0 ", "").slice(0, 120); };
 let traceEl = null;
