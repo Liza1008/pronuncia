@@ -7,8 +7,8 @@
 <title>Pronuncia</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Literata:opsz,wght@7..72,400;7..72,600;7..72,700&display=swap">
 <style>
-:root{--paper:#f5f7fb;--card:#fff;--ink:#152033;--muted:#566377;--rule:#e0e6ef;--accent:#1e78ff;--accent-ink:#0b5bd3;--accent-soft:#e4efff;--on-accent:#06101f;--ok:#0e7a48;--ok-soft:#dcf7e9;--bad:#c22437;--bad-soft:#ffe3e8;--near:#8f5e00;--near-soft:#fff3cc;--verde:#00a35a;--verde-soft:#dcf7e9;--verde-edge:#007a43;--on-verde:#04231a;--rosso:#e5324d;--rosso-soft:#ffe3e8;--rosso-edge:#b31e36;--on-rosso:#14060a;--sole:#ffb300;--sole-soft:#fff3cc;--mare:#1e78ff;--viola:#7c4dff;--viola-soft:#eee8ff;--track:rgba(21,32,51,.13);--shadow:rgba(20,30,50,.13);--font-ui:"Golos Text","Segoe UI",system-ui,sans-serif;--font-serif:"Literata",Georgia,"Times New Roman",serif}
-@media (prefers-color-scheme:dark){:root{--paper:#0e1420;--card:#182130;--ink:#eef2f9;--muted:#a8b3c6;--rule:#2b3648;--accent:#6ea8ff;--accent-ink:#6ea8ff;--accent-soft:#17294a;--on-accent:#08111f;--ok:#4fd18f;--ok-soft:#123a2a;--bad:#ff8a8f;--bad-soft:#40202a;--near:#f2bb55;--near-soft:#40351a;--verde:#2fd27f;--verde-soft:#123a2a;--verde-edge:#1a9c5a;--on-verde:#04231a;--rosso:#ff6b7f;--rosso-soft:#40202a;--rosso-edge:#d14358;--on-rosso:#14060a;--sole:#ffc83d;--sole-soft:#40351a;--mare:#6ea8ff;--viola:#b49cff;--viola-soft:#2c2450;--track:rgba(255,255,255,.16);--shadow:rgba(0,0,0,.5);color-scheme:dark}}
+:root{--paper:#f5f7fb;--card:#fff;--ink:#152033;--muted:#566377;--rule:#e0e6ef;--accent:#1e78ff;--accent-ink:#0b5bd3;--accent-soft:#e4efff;--on-accent:#06101f;--ok:#17795f;--ok-soft:#dff4ed;--bad:#c22437;--bad-soft:#ffe3e8;--near:#8f5e00;--near-soft:#fff3cc;--verde:#42b192;--verde-soft:#dff4ed;--verde-edge:#2b8a70;--on-verde:#04231a;--rosso:#e5324d;--rosso-soft:#ffe3e8;--rosso-edge:#b31e36;--on-rosso:#14060a;--sole:#ffb300;--sole-soft:#fff3cc;--mare:#1e78ff;--viola:#7c4dff;--viola-soft:#eee8ff;--track:rgba(21,32,51,.13);--shadow:rgba(20,30,50,.13);--font-ui:"Golos Text","Segoe UI",system-ui,sans-serif;--font-serif:"Literata",Georgia,"Times New Roman",serif}
+@media (prefers-color-scheme:dark){:root{--paper:#0e1420;--card:#182130;--ink:#eef2f9;--muted:#a8b3c6;--rule:#2b3648;--accent:#6ea8ff;--accent-ink:#6ea8ff;--accent-soft:#17294a;--on-accent:#08111f;--ok:#6fd4b6;--ok-soft:#17443a;--bad:#ff8a8f;--bad-soft:#40202a;--near:#f2bb55;--near-soft:#40351a;--verde:#42b192;--verde-soft:#17443a;--verde-edge:#2b8a70;--on-verde:#04231a;--rosso:#ff6b7f;--rosso-soft:#40202a;--rosso-edge:#d14358;--on-rosso:#14060a;--sole:#ffc83d;--sole-soft:#40351a;--mare:#6ea8ff;--viola:#b49cff;--viola-soft:#2c2450;--track:rgba(255,255,255,.16);--shadow:rgba(0,0,0,.5);color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 var(--font-ui)}
 body::before{content:"";display:block;height:5px;background:linear-gradient(90deg,#009246 0 33.33%,#fff 33.33% 66.66%,#ce2b37 66.66%);box-shadow:0 1px 0 var(--rule)}
@@ -342,7 +342,7 @@ function envCheck(){
 }
 // Safari сам не заканчивает запись и может не прислать итог: попытку завершают пауза, кнопка или страховочные таймеры.
 const SILENCE_MS = 1800, NO_SOUND_MS = 10000, STOP_WAIT_MS = 1200, MAX_MS = 10000;
-const VERSION = "31.10-4", DEBUG = new URLSearchParams(location.search).has("debug");
+const VERSION = "31.10-5", DEBUG = new URLSearchParams(location.search).has("debug");
 const verEl = document.createElement("p"); verEl.className = "ver"; verEl.textContent = t("version") + " " + VERSION; document.body.appendChild(verEl);
 const who = () => { const d = navigator.userAgentData, b = d && d.brands ? d.brands.map(x => x.brand).filter(x => !x.includes("Not")).join(", ") : ""; return (b ? b + " · " : "") + navigator.userAgent.replace("Mozilla/5.0 ", "").slice(0, 120); };
 let traceEl = null;
