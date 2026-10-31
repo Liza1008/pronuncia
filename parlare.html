@@ -128,6 +128,7 @@ body{--work:var(--viola);--work-soft:var(--viola-soft)}
 .keys{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:10px 0 6px}
 .keys button{font:inherit;font-size:1.05rem;min-width:44px;min-height:44px;border-radius:12px;border:1px solid var(--rule);background:var(--card);color:var(--ink);cursor:pointer;box-shadow:0 2px 0 var(--rule)}
 .result .diff mark{background:transparent;color:var(--bad);font-weight:700;text-decoration:underline}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:1}
 </style>
 </head>
 <body>
@@ -184,6 +185,7 @@ $("#spk").innerHTML = SPEAKER; $("#micIcon").innerHTML = MIC;
 // ---- языки: ?lang= из тетради, иначе последний выбранный, иначе русский
 const I18N = {
 ru:{ title:"Разговор и письмо", back:"← В тетрадь", posLabel:"Задание", needN:"нужно {a} для прохождения", needMet:"✅ пройдено", setsTitle:"Разделы", setDone:"пройдено", setNext:"следующий", setLocked:"закрыто", finishNext:"Следующий раздел →", toNotebook:"📒 В тетрадь", praiseSay:"Послушать", starsLabel:"Звёзд: {a} из 3", micCheck:"🎤 Проверить микрофон",
+  soundFail:"Не удалось загрузить звук. Проверьте сеть и нажмите ещё раз.",
   taskSay:"Скажите по-итальянски:", taskWrite:"Напишите по-итальянски:", taskQaSay:"Ответьте на вопрос голосом:", taskQaWrite:"Ответьте на вопрос письменно:", placeholder:"Напишите по-итальянски", check:"Проверить",
   mic:"Сказать", listening:"Слушаю… говорите", hint1:"💡 Подсказка", hint2:"💡 Ещё подсказка", hintEnd:"💡 Подсказок больше нет", playAnswer:"Послушать ответ", playQuestion:"Послушать вопрос",
   prev:"← Назад", next:"Дальше →", last:"Завершить →", again:"Ещё раз", pos:"{a} из {b}", done:"верно {a} из {b}", right:"✓ Верно", heardSay:"распознано", heardWrite:"ответ", example:"Пример ответа:", near:"≈ Почти.", Heard:"Распознано", Answer:"Ответ",
@@ -195,6 +197,7 @@ ru:{ title:"Разговор и письмо", back:"← В тетрадь", pos
   micApp:"Телефон не даёт Chrome микрофон. Откройте настройки телефона, затем «Приложения», <b>Chrome</b>, «Разрешения», «Микрофон» и выберите «Разрешить». Потом перезагрузите страницу.", micService:"Сайту микрофон разрешён, отказала служба распознавания Android. В настройках телефона откройте «Приложения», <b>Речевые сервисы Google</b>, «Разрешения», «Микрофон» и выберите «Разрешить». На Android 11 и старше то же для приложения <b>Google</b>. Если разрешение уже есть, закройте голосовой ввод и нажмите «Сказать» ещё раз.",
   micOk:"Микрофон разрешён. Нажмите «Сказать» ещё раз.", micNone:"Микрофон не найден." },
 en:{ title:"Speaking and writing", back:"← Back to the notebook", posLabel:"Task", needN:"{a} needed to pass", needMet:"✅ passed", setsTitle:"Sections", setDone:"passed", setNext:"next", setLocked:"locked", finishNext:"Next section →", toNotebook:"📒 Back to the notebook", praiseSay:"Listen", starsLabel:"Stars: {a} of 3", micCheck:"🎤 Check the microphone",
+  soundFail:"Could not load the audio. Check your connection and press again.",
   taskSay:"Say it in Italian:", taskWrite:"Write it in Italian:", taskQaSay:"Answer the question out loud:", taskQaWrite:"Answer the question in writing:", placeholder:"Write in Italian", check:"Check",
   mic:"Speak", listening:"Listening… speak now", hint1:"💡 Hint", hint2:"💡 Another hint", hintEnd:"💡 No more hints", playAnswer:"Listen to the answer", playQuestion:"Listen to the question",
   prev:"← Back", next:"Next →", last:"Finish →", again:"Try again", pos:"{a} of {b}", done:"correct: {a} of {b}", right:"✓ Correct", heardSay:"heard", heardWrite:"answer", example:"Example answer:", near:"≈ Almost.", Heard:"Heard", Answer:"Answer",
@@ -206,6 +209,7 @@ en:{ title:"Speaking and writing", back:"← Back to the notebook", posLabel:"Ta
   micApp:"The phone is not giving Chrome the microphone. Open the phone settings, then Apps, <b>Chrome</b>, Permissions, Microphone, and choose Allow. Then reload the page.", micService:"The site may use the microphone, but Android's recognition service refused. In the phone settings open Apps, <b>Speech Services by Google</b>, Permissions, Microphone and choose Allow. On Android 11 and older do the same for the <b>Google</b> app. If it is already allowed, close voice input and press Speak again.",
   micOk:"The microphone is allowed. Press Speak again.", micNone:"No microphone found." },
 uk:{ title:"Розмова і письмо", back:"← До зошита", posLabel:"Завдання", needN:"потрібно {a} для проходження", needMet:"✅ пройдено", setsTitle:"Розділи", setDone:"пройдено", setNext:"наступний", setLocked:"закрито", finishNext:"Наступний розділ →", toNotebook:"📒 До зошита", praiseSay:"Послухати", starsLabel:"Зірок: {a} з 3", micCheck:"🎤 Перевірити мікрофон",
+  soundFail:"Не вдалося завантажити звук. Перевірте мережу й натисніть ще раз.",
   taskSay:"Скажіть італійською:", taskWrite:"Напишіть італійською:", taskQaSay:"Дайте відповідь голосом:", taskQaWrite:"Дайте відповідь письмово:", placeholder:"Напишіть італійською", check:"Перевірити",
   mic:"Сказати", listening:"Слухаю… говоріть", hint1:"💡 Підказка", hint2:"💡 Ще підказка", hintEnd:"💡 Підказок більше немає", playAnswer:"Послухати відповідь", playQuestion:"Послухати запитання",
   prev:"← Назад", next:"Далі →", last:"Завершити →", again:"Ще раз", pos:"{a} з {b}", done:"правильно {a} з {b}", right:"✓ Правильно", heardSay:"розпізнано", heardWrite:"відповідь", example:"Приклад відповіді:", near:"≈ Майже.", Heard:"Розпізнано", Answer:"Відповідь",
@@ -326,14 +330,60 @@ const id = () => `${setId}:${entry()[0]}`;
 const passed = () => ONE ? 0 : deck.filter(e => store.ok[`${setId}:${e[0]}`]).length;
 
 // ---- озвучка: записи Elsa (audio/parlare.mp3, карта {фраза: [старт мс, длительность мс]}); голос системы только если клипа нет
-let player = null, stopAt = 0, stopTimer = 0; const MEDIA = {};
-function mediaSrc(f){ if (MEDIA[f]) return MEDIA[f]; const url = "audio/" + f; if (typeof fetch !== "function" || typeof URL === "undefined" || !URL.createObjectURL) return MEDIA[f] = Promise.resolve(url); return MEDIA[f] = fetch(url).then(r => { if (!r.ok) throw new Error(String(r.status)); return r.blob(); }).then(b => URL.createObjectURL(b)).catch(() => url); }
-function getPlayer(){ if (!player) { player = new Audio(); player.preload = "auto"; player.addEventListener("timeupdate", () => { if (stopAt && player.currentTime * 1000 >= stopAt) stopClip(); }); } return player; }
-function stopClip(){ clearTimeout(stopTimer); stopAt = 0; if (player && !player.paused) player.pause(); }
+let player = null, stopAt = 0, stopTimer = 0, stopPoll = 0, playerSrc = "", playerLoading = "", playerReady = "", clipSeq = 0, whenLoaded = null, playerJob = null, loadTimer = 0;
+// Файл целиком в память (blob URL): перемотка внутри трека работает сразу, даже если сервер не отдаёт диапазоны (Range). Сбой не запоминается: следующее нажатие скачает файл заново.
+// Прямой адрес только там, где fetch нет или он запрещён политикой страницы: у такого файла перед перемоткой проверяется player.seekable.
+// Ждём данные не дольше MEDIA_WAIT: ограничивать всё скачивание нельзя, файл весит до 4,3 МБ.
+const MEDIA = {}, MEDIA_STOP = {}, MEDIA_WAIT = 60000;
+let mediaDenied = location.protocol === "file:";
+document.addEventListener("securitypolicyviolation", e => { const d = e.effectiveDirective || e.violatedDirective || ""; if (/^(connect|default)/.test(d) || (/^media/.test(d) && /^blob/.test(e.blockedURI || ""))) mediaDenied = true; });
+async function mediaRead(r, alive){
+  if (!r.ok) throw new Error(String(r.status));
+  if (!r.body || !r.body.getReader) return r.blob();
+  const rd = r.body.getReader(), parts = [];
+  for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); alive(); }
+  return new Blob(parts, { type:r.headers.get("content-type") || "audio/mpeg" });
+}
+function mediaSrc(url){
+  if (MEDIA[url]) return MEDIA[url];
+  const addr = "audio/" + url;
+  if (mediaDenied || typeof fetch !== "function" || typeof AbortController !== "function" || typeof URL === "undefined" || !URL.createObjectURL) return MEDIA[url] = Promise.resolve(addr);
+  const ctl = new AbortController(); let timer = 0;
+  const alive = () => { clearTimeout(timer); timer = setTimeout(() => ctl.abort(), MEDIA_WAIT); };
+  const stop = MEDIA_STOP[url] = () => { clearTimeout(timer); delete MEDIA_STOP[url]; delete MEDIA[url]; ctl.abort(); };
+  const end = () => { clearTimeout(timer); if (MEDIA_STOP[url] === stop) delete MEDIA_STOP[url]; };
+  alive();
+  const job = MEDIA[url] = fetch(addr, { signal:ctl.signal }).then(r => { alive(); return mediaRead(r, alive); }).then(b => { end(); return URL.createObjectURL(b); }).catch(async e => {
+    if (e && e.name !== "AbortError") await new Promise(go => setTimeout(go, 50));   // событие запрета приходит отдельно от отказа fetch
+    end(); if (MEDIA[url] === job) delete MEDIA[url];
+    if (mediaDenied) return mediaSrc(url);
+    throw e;
+  });
+  return job;
+}
+function soundFail(){ note(t("soundFail"), true); }
+function getPlayer(){ if (!player) { player = new Audio(); player.preload = "auto"; player.addEventListener("timeupdate", () => { if (stopAt && player.currentTime * 1000 >= stopAt) stopClip(); });
+    player.addEventListener("loadedmetadata", () => { clearTimeout(loadTimer); playerReady = playerLoading; if (playerReady === playerSrc && whenLoaded) { const f = whenLoaded; whenLoaded = null; f(); } });
+    player.addEventListener("error", () => { if (playerLoading === playerSrc && playerReady !== playerSrc) loadFail(); });
+  } return player; }
+function stopClip(){ clipSeq++; clearTimeout(stopTimer); clearInterval(stopPoll); stopAt = 0; if (player && !player.paused) player.pause(); }
+// Файл в плеере меняется только здесь. Пока новый грузится, в плеере ещё старый: перематывать его нельзя, иначе звучит чужое слово. Играет последнее нажатие.
+function whenFile(url, fn){
+  const seq = ++clipSeq; whenLoaded = () => { if (seq === clipSeq) fn(seq); };
+  if (playerReady === url) { playerSrc = url; const f = whenLoaded; whenLoaded = null; f(); return; }
+  if (playerSrc === url) return;
+  playerSrc = url;
+  const job = playerJob = mediaSrc(url);
+  job.then(src => { if (playerSrc !== url || playerJob !== job) return; playerLoading = url; playerReady = ""; player.src = src; player.load(); clearTimeout(loadTimer); loadTimer = setTimeout(() => { if (playerLoading === playerSrc && playerReady !== playerSrc) loadFail(); }, MEDIA_WAIT); }, () => { if (playerSrc === url && playerJob === job) loadFail(); });
+}
+// Файл не загрузился. Сообщаем, только если нажатие ещё ждёт его: ушедший с экрана ученик сообщения не ждёт.
+function loadFail(){ const wanted = !!whenLoaded; delete MEDIA[playerSrc]; playerSrc = ""; whenLoaded = null; if (wanted) soundFail(); }
+// Позиция доступна, если файл в памяти или сервер даёт перемотку. Иначе браузер заиграл бы с начала файла, то есть чужой звук.
+function canSeek(t){ if (t < 0.05 || player.currentSrc.startsWith("blob:")) return true; const r = player.seekable; for (let i = 0; r && i < r.length; i++) if (t >= r.start(i) && t <= r.end(i)) return true; return false; }
+function clipEnd(seq, dur){ if (seq !== clipSeq) return; stopPoll = setInterval(() => { if (stopAt && player.currentTime * 1000 >= stopAt - 25) stopClip(); }, 15); stopTimer = setTimeout(stopClip, dur + 80); }
 function clip(seg){
   const p = getPlayer(), f = seg[2] || "parlare.mp3"; stopClip();
-  const go = () => { stopAt = seg[0] + seg[1]; p.currentTime = seg[0] / 1000; const pr = p.play(); (pr && pr.then ? pr : Promise.resolve()).then(() => { stopTimer = setTimeout(stopClip, seg[1] + 80); }).catch(() => { stopAt = 0; }); };
-  if (p.dataset.file !== f) { p.dataset.file = f; mediaSrc(f).then(src => { if (p.dataset.file !== f) return; p.src = src; p.addEventListener("loadedmetadata", go, { once:true }); p.load(); }); } else go();
+  whenFile(f, seq => { if (!canSeek(seg[0] / 1000)) { soundFail(); return; } stopAt = seg[0] + seg[1]; p.currentTime = seg[0] / 1000; const pr = p.play(); (pr && pr.then ? pr : Promise.resolve()).then(() => clipEnd(seq, seg[1])).catch(() => { if (seq === clipSeq) stopAt = 0; }); });
 }
 const clipOf = t => AUDIO_MAP[String(t).toLowerCase().replace(/[’‘]/g, "'")];
 let itVoice = null;
@@ -372,7 +422,7 @@ else if (noService()) note(t("noService"), true);
 else if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name:"microphone" }).then(p => { if (p.state === "denied") note(micDenied(), true); }).catch(() => {});
 // Safari сам не заканчивает запись и может не прислать итог: попытку завершают пауза, кнопка или страховочные таймеры.
 const SILENCE_MS = 2500, NO_SOUND_MS = 10000, STOP_WAIT_MS = 1200, MAX_MS = 20000;
-const VERSION = "31.10-6", DEBUG = params.has("debug");
+const VERSION = "31.10-7", DEBUG = params.has("debug");
 const verEl = document.createElement("p"); verEl.className = "ver"; verEl.textContent = t("version") + " " + VERSION; document.body.appendChild(verEl);
 const who = () => { const d = navigator.userAgentData, b = d && d.brands ? d.brands.map(x => x.brand).filter(x => !x.includes("Not")).join(", ") : ""; return (b ? b + " · " : "") + navigator.userAgent.replace("Mozilla/5.0 ", "").slice(0, 120); };
 let traceEl = null;
