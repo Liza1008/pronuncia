@@ -163,7 +163,7 @@ function put(msg){ lines.push(`+${((Date.now() - t0) / 1000).toFixed(1)}s ${msg}
 function row(k, v, cls){ env.insertAdjacentHTML("beforeend", `<div class="row"><span>${k}</span><b class="${cls || ""}">${v}</b></div>`); }
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 const inFrame = (() => { try { return window.top !== window; } catch (e) { return true; } })();
-row(t("rowVersion"), "1.11-1");
+row(t("rowVersion"), "1.11-2");
 row(t("rowOrigin"), location.origin.replace(/^https?:\/\//, ""));
 row(t("rowFrame"), t(inFrame ? "yes" : "no"));
 row(t("rowSecure"), t(window.isSecureContext ? "yes" : "no"), window.isSecureContext ? "yes" : "no");
